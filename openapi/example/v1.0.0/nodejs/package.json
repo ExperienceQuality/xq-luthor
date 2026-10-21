@@ -1,0 +1,27 @@
+{
+  "name": "@experiencequality/example-client",
+  "version": "1.0.0",
+  "description": "Generated TypeScript client for the example service (openapi/example/openapi.yaml, contract v1.0.0). Do not edit by hand.",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "schema.ts"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

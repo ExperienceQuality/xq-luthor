@@ -1,0 +1,59 @@
+{
+  "version": "1.0.3",
+  "release_tag": "v1.0.3",
+  "config_schema_version": "1.0.0",
+  "memory_schema_version": "1.0.0",
+  "installed_at": "2026-10-18T03:53:30.176Z",
+  "managed_files": {
+    ".devin/agents/analyst.md": "68524ce655ce67453360cbecda011989521b5fddaaa658f07a02fca19d7d904c",
+    ".devin/agents/implementer.md": "0b3bdac344cfc48027c0bf01f6369fcf9bb16d989a6322d9315201645f80cd80",
+    ".devin/agents/memory-maintainer.md": "28fc05ee48d005a07c93c61b8a409d8f7b4a47295160a19b65f7567497eef8e9",
+    ".devin/agents/reviewer.md": "8a9b89ed3306673133456db1b288838325f6b037082374880554fb9752621fbc",
+    ".devin/agents/tester.md": "58df9c0283161d6e4838aa7bb466cb22809ab8985ec45335bc89046c586f5cf3",
+    ".devin/skills/squad-delivery/SKILL.md": "624b4e68b0bc2e19cf7f217db43adda4ebccdba9c70169ca962e444bbc362d68",
+    ".squad/MEMORY.md": "b3d949e414ec6244496f2a9ffd7ac9c3c7c97e917bf5b8787d8b54dedd2c264b",
+    ".squad/README.md": "405574d210cf83a266e2d8c1451f1ed7bd5f732042f16320a651a1469bf0de20",
+    ".squad/agents/analyst.md": "cb00a094b1196f1a67d2390367c99d6db86769c5b1442798a3a516dad0e5df4a",
+    ".squad/agents/implementer.md": "cb15f63350284a1299a29be0c753389a15fe9cc61a8a930927dc0030db4f7850",
+    ".squad/agents/lead.md": "17a54118a5691ffacc3fd4584a95a771f14a3d0f961ae49e96a48ae6bc6f2c16",
+    ".squad/agents/memory-maintainer.md": "8a6e8b741c33b248b27bb1bb5e0cfbe980d90ca2ee7a582a7d180fa0c12b371c",
+    ".squad/agents/reviewer.md": "d4b741de01d29a24b5920e231d329fbc51f546758975431a2eb649b261e2e85c",
+    ".squad/agents/tester.md": "d16aa8f56d7558028f36a47d4f7cf6be60e0a97b332716c5338007b80e9a4146",
+    ".squad/schemas/memory-record.schema.json": "10c1bacdd15876636c58a9c1db6e7924f922135c2575a3d641e6387dafac28a7",
+    ".squad/schemas/squad-config.schema.json": "cf6989a9ce296260840cafff35d7e735fcb2ef5261919b33ad921a88958dfcfa",
+    ".squad/scripts/memory-search.mjs": "b094142e61f8aacb1d070046eb0ec01c87c62699503cd8ee64a0291ad4ad19fa",
+    ".squad/scripts/memory-update.mjs": "8d8eb49f66f19c4ec61eb165b5d742905796de09a4356ece8a9570b771f3eed7",
+    ".squad/scripts/merge-agents.mjs": "a4d9f48ec3771502e520302aee28c9a6600d6d92567403e718d8516a239fb582",
+    ".squad/scripts/upgrade-managed.mjs": "00fd2f51bb26bd4a80df5d6451ae70fd15f6ab5e9f2e9af4e35ebee9d4b98d8e",
+    ".squad/scripts/write-install-state.mjs": "49691318b695b9be3f82dafbda09a2a2b4020581c12b3177c530529c150174c9",
+    ".squad/squad.json": "782e2255559e6e653882fccfb201fa6275e9b0e60003113903f908b93555eee4",
+    ".squad/workflows/delivery.md": "65cc549d04d46c4c320e71dbc2f3df05e58f620c379d8fd8e4ede9a87f0500a4",
+    ".squad/workflows/memory-maintenance.md": "3489557287615fd250a4043f6d7d759df9d8c1b176f4365db9854ced7e272ba0",
+    ".squad/workflows/parallel-execution.md": "23ac688b55309ed2eddc2ee0ae8183a9729579e2fff8558d8073bbb35209fcb1",
+    "AGENTS.md": "beea58dc9443ad85867f9415046cabc2afda3765b1be9e0dbfd3a075d4fd2aca"
+  },
+  "ownership": {
+    "upstream_managed": [
+      ".devin/agents/**",
+      ".devin/skills/**",
+      ".devin/rules/**",
+      ".squad/agents/**",
+      ".squad/workflows/**",
+      ".squad/schemas/**",
+      ".squad/scripts/**",
+      ".squad/README.md"
+    ],
+    "merge_managed": [
+      "AGENTS.md",
+      ".squad/squad.json",
+      ".squad/install-state.json"
+    ],
+    "consumer_owned": [
+      ".squad/MEMORY.md",
+      ".squad/knowledge/**",
+      ".squad/memory/**",
+      ".devin/rules/local-*",
+      ".devin/agents/local-*"
+    ]
+  }
+}

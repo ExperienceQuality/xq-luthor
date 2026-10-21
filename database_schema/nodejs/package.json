@@ -1,0 +1,26 @@
+{
+  "name": "@experiencequality/db-client",
+  "version": "0.1.0",
+  "description": "Generated Kysely Database types for database_schema/schema.sql. Do not edit by hand.",
+  "type": "module",
+  "main": "./schema-types.ts",
+  "types": "./schema-types.ts",
+  "exports": {
+    ".": "./schema-types.ts"
+  },
+  "files": [
+    "schema-types.ts"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "kysely": "0.29.6"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

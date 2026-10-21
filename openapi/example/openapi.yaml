@@ -1,0 +1,33 @@
+openapi: 3.0.3
+info:
+  title: Example Service API
+  description: >-
+    Placeholder OpenAPI document for the example service. Replace this file
+    with the hand-authored contract for a real service.
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Service health check
+      responses:
+        "200":
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        uptimeSeconds:
+          type: integer
+          format: int64

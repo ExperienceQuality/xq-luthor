@@ -1,0 +1,13 @@
+{
+  "name": "xq-luthor-pipeline-nodejs",
+  "private": true,
+  "description": "Pinned codegen toolchain for the OpenAPI -> nodejs client pipeline (ADR 0001). Never published.",
+  "devDependencies": {
+    "kysely": "0.29.6",
+    "kysely-codegen": "0.20.0",
+    "openapi-fetch": "0.17.0",
+    "openapi-typescript": "7.13.0",
+    "pg": "8.23.1",
+    "typescript": "5.9.3"
+  }
+}

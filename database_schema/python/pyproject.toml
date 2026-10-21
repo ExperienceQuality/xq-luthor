@@ -1,0 +1,18 @@
+[project]
+name = "xq-db-client"
+version = "0.1.0"
+description = "SQLAlchemy declarative models generated from database_schema/schema.sql. Do not edit by hand; regenerate with scripts/gen-db-python.sh."
+authors = []
+requires-python = ">=3.10"
+readme = "README.md"
+dependencies = [
+    "sqlalchemy>=2.0.29,<3.0.0",
+]
+
+[tool.uv.build-backend]
+module-name = "xq_db_client"
+module-root = ""
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"
