@@ -152,8 +152,8 @@
 **Description:** Lint openapi yaml + schema on change; regeneration-diff check to catch drift. Pre-commit or CI.
 
 **Acceptance criteria:**
-- [ ] Invalid contract fails the gate
-- [ ] Uncommitted generated drift fails the gate
+- [x] Invalid contract fails the gate
+- [x] Uncommitted generated drift fails the gate
 
 **Verification:** introduce deliberate break, gate catches it
 **Assignee:** `implementer`

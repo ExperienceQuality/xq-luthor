@@ -1,6 +1,8 @@
 # ADR 0001: Codegen tool selection for contract pipelines
 
-Status: Accepted — pending human review at the Foundation checkpoint (tasks/plan.md). Not binding until approved.
+Status: Accepted — approved at Foundation checkpoint.
+
+> **Amendment (Phase 2):** The ephemeral Postgres preamble (`scripts/pg-ephemeral.sh` → `scripts/pg-ephemeral.py`) was updated from a Docker container to embedded `postgresql-binaries==16.15.0` invoked via `uv`. All three SQL DDL codegen pipelines introspect a real, version-pinned PostgreSQL 16.15.0 cluster with zero Docker dependency.
 
 ## Context
 
