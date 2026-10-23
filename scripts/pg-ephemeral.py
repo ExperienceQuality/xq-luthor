@@ -41,56 +41,72 @@ def start():
     sock_dir = os.path.join(inst_dir, "sock")
     os.makedirs(sock_dir, exist_ok=True)
 
-    # Pick a port: find an open port or use standard dynamic port
+    # Pick a port on 127.0.0.1
     import socket
     s = socket.socket()
-    s.bind(('', 0))
+    s.bind(('127.0.0.1', 0))
     port = s.getsockname()[1]
     s.close()
 
     try:
         # Initialize cluster
-        subprocess.check_call(
+        subprocess.run(
             [initdb, "-D", data_dir, "-E", "UTF8", "-A", "trust", "-U", DB_USER],
+            check=True,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            text=True
         )
         
         # Start cluster
         log_file = os.path.join(inst_dir, "pg.log")
-        subprocess.check_call(
+        subprocess.run(
             [
                 pg_ctl, "-D", data_dir, "-l", log_file,
                 "-o", f"-k {sock_dir} -p {port} -h 127.0.0.1",
                 "-w", "start"
             ],
+            check=True,
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            text=True
         )
 
         # Apply schema.sql
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         schema_path = os.path.join(repo_root, "database_schema", "schema.sql")
         if os.path.exists(schema_path):
-            subprocess.check_call(
+            subprocess.run(
                 [psql, "-h", "127.0.0.1", "-p", str(port), "-U", DB_USER, "-d", DB_NAME, "-v", "ON_ERROR_STOP=1", "-f", schema_path],
+                check=True,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                text=True
             )
 
         # Emit results
         print(f"postgresql://{DB_USER}:{DB_USER}@127.0.0.1:{port}/{DB_NAME}")
         sys.stderr.write(f"container: {name}\n")
         sys.stderr.flush()
+    except subprocess.CalledProcessError as e:
+        if e.stderr:
+            sys.stderr.write(e.stderr)
+        stop(name)
+        sys.stderr.write(f"Error starting ephemeral postgres: {e}\n")
+        sys.exit(1)
     except Exception as e:
-        # Cleanup on failure
         stop(name)
         sys.stderr.write(f"Error starting ephemeral postgres: {e}\n")
         sys.exit(1)
 
 def stop(name):
-    inst_dir = os.path.join(get_base_tmp(), name)
-    if not os.path.exists(inst_dir):
+    import re
+    if not re.match(r"^xq-luthor-pg-[0-9]+$", name):
+        sys.stderr.write(f"Invalid ephemeral postgres instance name: {name}\n")
+        return
+    base = os.path.realpath(get_base_tmp())
+    inst_dir = os.path.realpath(os.path.join(base, name))
+    if not inst_dir.startswith(base + os.sep) or not os.path.exists(inst_dir):
         return
     data_dir = os.path.join(inst_dir, "data")
     try:

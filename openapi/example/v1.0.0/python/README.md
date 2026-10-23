@@ -1,7 +1,7 @@
 # xq-example-client
 A client library for accessing Example Service API
 
-<!-- HAND-WRITTEN packaging glue (not generated): keep this Install section in sync with docs/contracts-conventions.md. -->
+<!-- Generated packaging glue: emitted by scripts/gen-openapi-python.sh; keep in sync with docs/contracts-conventions.md. -->
 ## Install
 Install directly from the `xq-luthor` repo via `uv`:
 

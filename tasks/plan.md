@@ -23,32 +23,32 @@ database_schema/{nodejs,python,java}/
 ## Task List
 
 ### Phase 1: Foundation
-- [ ] Task 1: Scaffold directory skeleton + layout docs
-- [ ] Task 2: Contract conventions doc (naming, versioning, authorship rules)
-- [ ] Task 3: Pin codegen tool decisions (ADR)
+- [x] Task 1: Scaffold directory skeleton + layout docs
+- [x] Task 2: Contract conventions doc (naming, versioning, authorship rules)
+- [x] Task 3: Pin codegen tool decisions (ADR)
 
 ### Checkpoint: Foundation
-- [ ] Layout reviewed with human; conventions approved; tools chosen
+- [x] Layout reviewed with human; conventions approved; tools chosen
 
 ### Phase 2: Codegen pipelines
-- [ ] Task 4: OpenAPI -> nodejs client pipeline
-- [ ] Task 5: OpenAPI -> python client pipeline
-- [ ] Task 6: OpenAPI -> java client pipeline
-- [ ] Task 7: database_schema -> {nodejs,python,java} client pipeline
+- [x] Task 4: OpenAPI -> nodejs client pipeline
+- [x] Task 5: OpenAPI -> python client pipeline
+- [x] Task 6: OpenAPI -> java client pipeline
+- [x] Task 7: database_schema -> {nodejs,python,java} client pipeline
 
 ### Checkpoint: Pipelines
-- [ ] Each generator runs against a sample contract and produces committed output
+- [x] Each generator runs against a sample contract and produces committed output
 
 ### Phase 3: Distribution
-- [ ] Task 9: nodejs client publish -> GitHub Packages (npm)
-- [ ] Task 10: java client publish -> GitHub Packages (Maven)
-- [ ] Task 11: python client packaging for `uv` git install (pyproject + tags)
+- [x] Task 9: nodejs client publish -> GitHub Packages (npm)
+- [x] Task 10: java client publish -> GitHub Packages (Maven)
+- [x] Task 11: python client packaging for `uv` git install (pyproject + tags)
 
 ### Phase 4: Validation
-- [ ] Task 8: Lint/validate contracts on change (CI or pre-commit)
+- [x] Task 8: Lint/validate contracts on change (CI or pre-commit)
 
 ### Checkpoint: Complete
-- [ ] All acceptance criteria met; memory updated; ready for review
+- [x] All acceptance criteria met; memory updated; ready for review
 
 ## Risks and Mitigations
 
