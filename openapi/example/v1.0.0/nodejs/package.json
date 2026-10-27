@@ -21,6 +21,11 @@
   "devDependencies": {
     "typescript": "5.9.3"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ExperienceQuality/xq-luthor.git",
+    "directory": "openapi/example/v1.0.0/nodejs"
+  },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   }

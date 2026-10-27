@@ -97,6 +97,11 @@ cat > "$OUT_DIR/package.json" <<EOF
   "devDependencies": {
     "typescript": "$TYPESCRIPT_VERSION"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ExperienceQuality/xq-luthor.git",
+    "directory": "database_schema/nodejs"
+  },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   }
