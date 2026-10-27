@@ -1,0 +1,29 @@
+# Mirrors pinned third-party codegen images from Docker Hub into GitHub
+# Container Registry so pipelines pull from ghcr.io, not Docker Hub (avoids
+# Docker Hub anonymous pull rate limits). --preserve-digests keeps the
+# multi-arch manifest digest identical, so scripts pin the same sha256.
+name: mirror-images
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/mirror-images.yml
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to ghcr.io
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | skopeo login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Mirror openapi-generator-cli v7.26.0
+        run: |
+          skopeo copy --all --preserve-digests \
+            docker://docker.io/openapitools/openapi-generator-cli@sha256:a304ddf1e2e5f24f68fa3153568d6174cea4959d09aa8e3db6d526fd0782326d \
+            docker://ghcr.io/experiencequality/openapi-generator-cli:v7.26.0
+          skopeo inspect --raw docker://ghcr.io/experiencequality/openapi-generator-cli@sha256:a304ddf1e2e5f24f68fa3153568d6174cea4959d09aa8e3db6d526fd0782326d >/dev/null

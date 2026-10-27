@@ -8,9 +8,12 @@
 # Resolved pins (recorded at pipeline-build time 2026-10; bump only via a
 # deliberate upgrade PR):
 #   Generator release : openapi-generator-cli 7.26.0 (latest stable at pin time)
-#   Docker image      : openapitools/openapi-generator-cli
+#   Docker image      : ghcr.io/experiencequality/openapi-generator-cli
 #                       @sha256:a304ddf1e2e5f24f68fa3153568d6174cea4959d09aa8e3db6d526fd0782326d
-#                       (multi-arch manifest digest for tag v7.26.0, amd64+arm64)
+#                       (multi-arch manifest digest for tag v7.26.0, amd64+arm64;
+#                       mirrored digest-for-digest from Docker Hub
+#                       openapitools/openapi-generator-cli by
+#                       .github/workflows/mirror-images.yml)
 #   CLI jar (fallback): https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/7.26.0/openapi-generator-cli-7.26.0.jar
 #                       sha256=1760050094997b9cc790cc1350be095f15da8c08a996b184d3eadc4ccda5e35e
 #                       sha1  =b96b148fcf482808037f68fbad99cb4d7e65d40b (matches Maven Central)
@@ -40,7 +43,7 @@ usage() { sed -n '2,/^set -eu/p' "$0" | sed 's/^# \{0,1\}//; s/^#$//' | head -n 
 
 # --- pinned tool coordinates -------------------------------------------------
 OGEN_VERSION="7.26.0"
-OGEN_IMAGE="openapitools/openapi-generator-cli@sha256:a304ddf1e2e5f24f68fa3153568d6174cea4959d09aa8e3db6d526fd0782326d"
+OGEN_IMAGE="ghcr.io/experiencequality/openapi-generator-cli@sha256:a304ddf1e2e5f24f68fa3153568d6174cea4959d09aa8e3db6d526fd0782326d"
 OGEN_JAR_URL="https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/${OGEN_VERSION}/openapi-generator-cli-${OGEN_VERSION}.jar"
 OGEN_JAR_SHA256="1760050094997b9cc790cc1350be095f15da8c08a996b184d3eadc4ccda5e35e"
 GH_PACKAGES_URL="https://maven.pkg.github.com/ExperienceQuality/xq-luthor"
