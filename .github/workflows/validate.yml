@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   contracts:
@@ -33,6 +34,13 @@ jobs:
           java-version: "21"
         # Maven is preinstalled on ubuntu-latest; gen-db-java.sh falls back to
         # tools/apache-maven-3.9.16/bin/mvn when mvn is absent.
+
+      - name: Log in to ghcr.io (codegen images)
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run contract validation gate
         run: ./scripts/validate.sh
