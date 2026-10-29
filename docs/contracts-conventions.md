@@ -43,3 +43,103 @@ Rules for everything under `openapi/` and `database_schema/`. Contracts are the 
 - Examples:
   - `uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@py/xq-example-client/1.0.0#subdirectory=openapi/example/v1.0.0/python'`
   - `uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@py/xq-db-client/0.1.0#subdirectory=database_schema/python'`
+
+## Consuming clients
+
+GitHub Packages requires a token to install npm and Maven packages, even public ones. Use:
+
+- locally: a classic personal access token with `read:packages`;
+- in a consumer repo's GitHub Actions: the built-in `GITHUB_TOKEN` with `permissions: packages: read`. If a package is private, also grant the consumer repo access under the package's *Package settings → Manage Actions access*.
+
+Python clients need no token (git install from this public repo; see [Distribution](#distribution)).
+
+### Java (Maven)
+
+Coordinates: `com.experiencequality:<service>-client:<semver>` (e.g. `example-client:1.0.0`) and `com.experiencequality:db-client:<semver>`.
+
+`pom.xml`:
+
+```xml
+<repositories>
+  <repository>
+    <id>github-xq-luthor</id>
+    <url>https://maven.pkg.github.com/ExperienceQuality/xq-luthor</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>com.experiencequality</groupId>
+    <artifactId>example-client</artifactId>
+    <version>1.0.0</version>
+  </dependency>
+</dependencies>
+```
+
+`~/.m2/settings.xml` (the `<id>` must match the repository id above):
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github-xq-luthor</id>
+      <username>${env.GITHUB_ACTOR}</username>
+      <password>${env.GITHUB_TOKEN}</password>
+    </server>
+  </servers>
+</settings>
+```
+
+### Java (Gradle, Kotlin DSL)
+
+```kotlin
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/ExperienceQuality/xq-luthor")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+
+dependencies {
+    implementation("com.experiencequality:example-client:1.0.0")
+}
+```
+
+### Node.js (npm)
+
+Packages: `@experiencequality/<service>-client` (e.g. `example-client@1.0.0`) and `@experiencequality/db-client`.
+
+`.npmrc` in the consumer project:
+
+```ini
+@experiencequality:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Then `npm install @experiencequality/example-client@1.0.0`.
+
+### GitHub Actions example
+
+```yaml
+permissions:
+  contents: read
+  packages: read
+
+steps:
+  - uses: actions/checkout@v4
+  # Maven only: writes ~/.m2/settings.xml with the <server> entry above.
+  - uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: "21"
+      server-id: github-xq-luthor
+      server-username: GITHUB_ACTOR
+      server-password: GITHUB_TOKEN
+  - run: mvn -B verify          # or: ./gradlew build / npm ci
+    env:
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
