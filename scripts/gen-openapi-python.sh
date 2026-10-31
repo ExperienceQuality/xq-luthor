@@ -137,23 +137,33 @@ rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 cp -R "$TMP_DIR/gen/." "$OUT_DIR/"
 
-# Inject the Install section (uv git-install one-liner) into the generated
-# README before its first `## ` heading. Deterministic: same service + version
-# => same inserted block (docs/contracts-conventions.md, Distribution).
+# Inject the Install section (GitHub Release wheel + git-tag fallback) into
+# the generated README before its first `## ` heading. Deterministic: same
+# service + version => same inserted block (docs/contracts-conventions.md,
+# Distribution). Wheel name follows PEP 427: package name + version, `py3`.
 README="$OUT_DIR/README.md"
 if [ -f "$README" ]; then
-    INSTALL_CMD="uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@py/xq-$SERVICE-client/${VERSION#v}#subdirectory=openapi/$SERVICE/$VERSION/python'"
-    awk -v install_cmd="$INSTALL_CMD" '
+    SEMVER=${VERSION#v}
+    WHEEL="xq_${PKG_MODULE}_client-${SEMVER}-py3-none-any.whl"
+    WHEEL_CMD="uv pip install 'https://github.com/ExperienceQuality/xq-luthor/releases/download/py/xq-$SERVICE-client/$SEMVER/$WHEEL'"
+    INSTALL_CMD="uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@py/xq-$SERVICE-client/$SEMVER#subdirectory=openapi/$SERVICE/$VERSION/python'"
+    awk -v wheel_cmd="$WHEEL_CMD" -v install_cmd="$INSTALL_CMD" '
         !inserted && /^## / {
             print "<!-- Generated packaging glue: emitted by scripts/gen-openapi-python.sh; keep in sync with docs/contracts-conventions.md. -->"
             print "## Install"
-            print "Install directly from the `xq-luthor` repo via `uv`:"
+            print "Install the published wheel from its GitHub Release via `uv`:"
+            print ""
+            print "```bash"
+            print wheel_cmd
+            print "```"
+            print ""
+            print "Or build from source at the release tag:"
             print ""
             print "```bash"
             print install_cmd
             print "```"
             print ""
-            print "See `docs/contracts-conventions.md` (Distribution) for the `py/<package>/<semver>` tag scheme."
+            print "See `docs/contracts-conventions.md` (Distribution) for the `py/<package>/<semver>` release scheme."
             print ""
             inserted = 1
         }
@@ -162,13 +172,19 @@ if [ -f "$README" ]; then
             if (!inserted) {
                 print "<!-- Generated packaging glue: emitted by scripts/gen-openapi-python.sh; keep in sync with docs/contracts-conventions.md. -->"
                 print "## Install"
-                print "Install directly from the `xq-luthor` repo via `uv`:"
+                print "Install the published wheel from its GitHub Release via `uv`:"
+                print ""
+                print "```bash"
+                print wheel_cmd
+                print "```"
+                print ""
+                print "Or build from source at the release tag:"
                 print ""
                 print "```bash"
                 print install_cmd
                 print "```"
                 print ""
-                print "See `docs/contracts-conventions.md` (Distribution) for the `py/<package>/<semver>` tag scheme."
+                print "See `docs/contracts-conventions.md` (Distribution) for the `py/<package>/<semver>` release scheme."
             }
         }
     ' "$README" > "$README.tmp"

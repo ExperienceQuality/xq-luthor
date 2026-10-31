@@ -3,13 +3,19 @@ A client library for accessing Fitness BFF API
 
 <!-- Generated packaging glue: emitted by scripts/gen-openapi-python.sh; keep in sync with docs/contracts-conventions.md. -->
 ## Install
-Install directly from the `xq-luthor` repo via `uv`:
+Install the published wheel from its GitHub Release via `uv`:
+
+```bash
+uv pip install 'https://github.com/ExperienceQuality/xq-luthor/releases/download/py/xq-fitness-bff-client/1.0.0/xq_fitness_bff_client-1.0.0-py3-none-any.whl'
+```
+
+Or build from source at the release tag:
 
 ```bash
 uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@py/xq-fitness-bff-client/1.0.0#subdirectory=openapi/fitness-bff/v1.0.0/python'
 ```
 
-See `docs/contracts-conventions.md` (Distribution) for the `py/<package>/<semver>` tag scheme.
+See `docs/contracts-conventions.md` (Distribution) for the `py/<package>/<semver>` release scheme.
 
 ## Usage
 First, create a client:

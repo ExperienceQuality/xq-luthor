@@ -3,13 +3,19 @@ A client library for accessing Exercise Service API
 
 <!-- Generated packaging glue: emitted by scripts/gen-openapi-python.sh; keep in sync with docs/contracts-conventions.md. -->
 ## Install
-Install directly from the `xq-luthor` repo via `uv`:
+Install the published wheel from its GitHub Release via `uv`:
+
+```bash
+uv pip install 'https://github.com/ExperienceQuality/xq-luthor/releases/download/py/xq-exercise-service-client/1.1.0/xq_exercise_service_client-1.1.0-py3-none-any.whl'
+```
+
+Or build from source at the release tag:
 
 ```bash
 uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@py/xq-exercise-service-client/1.1.0#subdirectory=openapi/exercise-service/v1.1.0/python'
 ```
 
-See `docs/contracts-conventions.md` (Distribution) for the `py/<package>/<semver>` tag scheme.
+See `docs/contracts-conventions.md` (Distribution) for the `py/<package>/<semver>` release scheme.
 
 ## Usage
 First, create a client:
