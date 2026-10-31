@@ -1,0 +1,643 @@
+openapi: 3.1.0
+info:
+  description: Manage ordered workout routines and compose exercise history.
+  title: Routine Service API
+  version: 1.0.0
+servers:
+- url: /
+paths:
+  /livez:
+    get:
+      operationId: liveness
+      responses:
+        "200":
+          description: Service is alive.
+      summary: Check liveness
+      x-accepts:
+      - application/json
+  /readyz:
+    get:
+      operationId: readiness
+      responses:
+        "200":
+          description: Service is ready.
+      summary: Check readiness
+      x-accepts:
+      - application/json
+  /api/v1/routines:
+    get:
+      operationId: listRoutines
+      parameters:
+      - $ref: "#/components/parameters/Limit"
+      - explode: true
+        in: query
+        name: includeArchived
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoutinePage"
+          description: Routine page.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      summary: List routines
+      x-accepts:
+      - application/json
+      - application/problem+json
+    post:
+      operationId: createRoutine
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoutineRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+          description: Routine created.
+          headers:
+            Location:
+              explode: false
+              required: true
+              schema:
+                format: uri-reference
+                type: string
+              style: simple
+            ETag:
+              explode: false
+              required: true
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/BadRequest"
+      summary: Create a routine
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/routines/{routineId}:
+    delete:
+      operationId: archiveRoutine
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      responses:
+        "204":
+          description: Routine archived.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+      summary: Archive a routine
+      x-accepts:
+      - application/problem+json
+    get:
+      operationId: getRoutine
+      parameters:
+      - $ref: "#/components/parameters/RoutineId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+          description: Routine details.
+        "404":
+          $ref: "#/components/responses/NotFound"
+      summary: Get a routine
+      x-accepts:
+      - application/json
+      - application/problem+json
+    parameters:
+    - $ref: "#/components/parameters/RoutineId"
+    patch:
+      operationId: updateRoutine
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: "#/components/schemas/RoutinePatch"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+          description: Routine updated.
+          headers:
+            ETag:
+              explode: false
+              required: true
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+      summary: Update routine metadata
+      x-content-type: application/merge-patch+json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/routines/{routineId}/sessions:
+    parameters:
+    - $ref: "#/components/parameters/RoutineId"
+    post:
+      operationId: addRoutineSession
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+          description: Session added.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+      summary: Add an ordered session
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/routines/{routineId}/sessions/{sessionId}:
+    delete:
+      operationId: deleteRoutineSession
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      - $ref: "#/components/parameters/SessionId"
+      responses:
+        "204":
+          description: Session deleted.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+      summary: Delete a session
+      x-accepts:
+      - application/problem+json
+    get:
+      operationId: getRoutineSession
+      parameters:
+      - $ref: "#/components/parameters/RoutineId"
+      - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+          description: Session details.
+        "404":
+          $ref: "#/components/responses/NotFound"
+      summary: Get a routine session
+      x-accepts:
+      - application/json
+      - application/problem+json
+    parameters:
+    - $ref: "#/components/parameters/RoutineId"
+    - $ref: "#/components/parameters/SessionId"
+    put:
+      operationId: replaceRoutineSession
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+          description: Session replaced.
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+      summary: Replace a session
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/routines/{routineId}/exercise-records:
+    get:
+      operationId: listExerciseRecords
+      parameters:
+      - explode: true
+        in: query
+        name: sessionId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: form
+      - $ref: "#/components/parameters/Limit"
+      - $ref: "#/components/parameters/Cursor"
+      - $ref: "#/components/parameters/RoutineId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecordPage"
+          description: Composed exercise records.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      summary: Compose exercise records for a session
+      x-accepts:
+      - application/json
+      - application/problem+json
+    parameters:
+    - $ref: "#/components/parameters/RoutineId"
+components:
+  parameters:
+    RoutineId:
+      explode: false
+      in: path
+      name: routineId
+      required: true
+      schema:
+        format: uuid
+        type: string
+      style: simple
+    SessionId:
+      explode: false
+      in: path
+      name: sessionId
+      required: true
+      schema:
+        format: uuid
+        type: string
+      style: simple
+    Limit:
+      explode: true
+      in: query
+      name: limit
+      required: false
+      schema:
+        default: 20
+        maximum: 100
+        minimum: 1
+        type: integer
+      style: form
+    Cursor:
+      explode: true
+      in: query
+      name: cursor
+      required: false
+      schema:
+        type: string
+      style: form
+    IfMatch:
+      explode: false
+      in: header
+      name: If-Match
+      required: true
+      schema:
+        type: string
+      style: simple
+  responses:
+    BadRequest:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Request validation failed.
+    NotFound:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Resource not found.
+    PreconditionFailed:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: ETag precondition failed.
+    BadGateway:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Downstream response was invalid.
+    ServiceUnavailable:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Downstream service unavailable.
+  schemas:
+    RoutineRequest:
+      additionalProperties: false
+      example:
+        name: name
+        notes: notes
+      properties:
+        name:
+          maxLength: 120
+          minLength: 1
+          type: string
+        notes:
+          maxLength: 2000
+          nullable: true
+          type: string
+      required:
+      - name
+    RoutinePatch:
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          maxLength: 120
+          minLength: 1
+          type: string
+        notes:
+          maxLength: 2000
+          nullable: true
+          type: string
+    Routine:
+      example:
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        name: name
+        notes: notes
+        archivedAt: 2000-01-23T04:56:07.000+00:00
+        version: 1
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+        sessions:
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          name: name
+          position: 0
+          exercises:
+          - name: name
+          - name: name
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          name: name
+          position: 0
+          exercises:
+          - name: name
+          - name: name
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        notes:
+          nullable: true
+          type: string
+        archivedAt:
+          format: date-time
+          nullable: true
+          type: string
+        version:
+          format: int64
+          minimum: 1
+          type: integer
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        sessions:
+          items:
+            $ref: "#/components/schemas/Session"
+          type: array
+          default: null
+      required:
+      - createdAt
+      - id
+      - name
+      - sessions
+      - updatedAt
+      - version
+    RoutineListItem:
+      example:
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        name: name
+        notes: notes
+        archivedAt: 2000-01-23T04:56:07.000+00:00
+        version: 1
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        notes:
+          nullable: true
+          type: string
+        archivedAt:
+          format: date-time
+          nullable: true
+          type: string
+        version:
+          format: int64
+          minimum: 1
+          type: integer
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+      - createdAt
+      - id
+      - name
+      - updatedAt
+      - version
+    RoutinePage:
+      example:
+        items:
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          name: name
+          notes: notes
+          archivedAt: 2000-01-23T04:56:07.000+00:00
+          version: 1
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          name: name
+          notes: notes
+          archivedAt: 2000-01-23T04:56:07.000+00:00
+          version: 1
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+        nextCursor: nextCursor
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/RoutineListItem"
+          type: array
+          default: null
+        nextCursor:
+          nullable: true
+          type: string
+      required:
+      - items
+    SessionRequest:
+      additionalProperties: false
+      example:
+        name: name
+        position: 0
+        exercises:
+        - name: name
+        - name: name
+        - name: name
+        - name: name
+        - name: name
+      properties:
+        name:
+          maxLength: 120
+          minLength: 1
+          type: string
+        position:
+          minimum: 0
+          type: integer
+        exercises:
+          items:
+            $ref: "#/components/schemas/ExerciseReference"
+          maxItems: 50
+          minItems: 1
+          type: array
+          default: null
+      required:
+      - exercises
+      - name
+      - position
+    ExerciseReference:
+      additionalProperties: false
+      example:
+        name: name
+      properties:
+        name:
+          maxLength: 120
+          minLength: 1
+          type: string
+      required:
+      - name
+    Session:
+      example:
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        name: name
+        position: 0
+        exercises:
+        - name: name
+        - name: name
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        position:
+          minimum: 0
+          type: integer
+        exercises:
+          items:
+            $ref: "#/components/schemas/ExerciseReference"
+          type: array
+          default: null
+      required:
+      - exercises
+      - id
+      - name
+      - position
+    RecordPage:
+      example:
+        items:
+        - key: ""
+        - key: ""
+        nextCursor: nextCursor
+      properties:
+        items:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          default: null
+        nextCursor:
+          nullable: true
+          type: string
+      required:
+      - items
+    Problem:
+      properties:
+        type:
+          format: uri-reference
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+        violations:
+          items:
+            $ref: "#/components/schemas/Problem_violations_inner"
+          type: array
+          default: null
+      required:
+      - code
+      - detail
+      - status
+      - title
+      - type
+    Problem_violations_inner:
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+      required:
+      - field
+      - message
+
