@@ -64,4 +64,4 @@ database_schema/{nodejs,python,java}/
 - Database engine: **PostgreSQL**.
 - Schema format: **canonical SQL DDL** in `database_schema/`; Prisma or ORM artifacts generated for consumers as needed.
 - Consumers pull clients as **published packages**.
-- Registry: **GitHub Packages** (npm + Maven). Python unsupported there — Python clients install via **`uv` from the GitHub repo/tag**.
+- Registry: **GitHub Packages** (npm + Maven). Python unsupported there — Python clients ship as **wheel/sdist assets on GitHub Releases** (`py/<pkg>/<semver>` tags); `uv` git-tag install remains as source fallback.
