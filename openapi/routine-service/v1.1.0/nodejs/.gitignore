@@ -1,0 +1,3 @@
+# Install-time artifacts only; the committed client is the .ts output itself.
+node_modules/
+package-lock.json
