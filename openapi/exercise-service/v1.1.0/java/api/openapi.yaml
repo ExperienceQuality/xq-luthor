@@ -1,0 +1,436 @@
+openapi: 3.1.0
+info:
+  description: Multi-user exercise log book. Owns actual performed exercise logs and
+    sets.
+  title: Exercise Service API
+  version: 1.1.0
+servers:
+- url: /
+security:
+- bearerAuth: []
+paths:
+  /api/v1/exercise-logs:
+    get:
+      operationId: listExerciseLogs
+      parameters:
+      - description: Case-insensitive exact exercise-name filter.
+        explode: true
+        in: query
+        name: exerciseName
+        required: false
+        schema:
+          minLength: 1
+          type: string
+        style: form
+      - description: Repeated query parameter; matches any supplied name case-insensitively.
+        explode: true
+        in: query
+        name: exerciseNames
+        required: false
+        schema:
+          items:
+            maxLength: 120
+            minLength: 1
+            type: string
+          maxItems: 50
+          type: array
+          default: null
+        style: form
+      - explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: loggedAt
+          enum:
+          - loggedAt
+          - highestSetVolume
+          type: string
+        style: form
+      - $ref: "#/components/parameters/Limit"
+      - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExerciseLogPage"
+          description: Page of exercise logs.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      summary: List the authenticated user's exercise logs.
+      x-accepts:
+      - application/json
+      - application/problem+json
+    post:
+      operationId: createExerciseLog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExerciseLogRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExerciseLog"
+          description: Exercise log created.
+          headers:
+            Location:
+              explode: false
+              required: true
+              schema:
+                format: uri-reference
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      summary: Create an exercise log for the authenticated user.
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/exercise-logs/exercises:
+    get:
+      operationId: listDistinctExercises
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/ExerciseSummary"
+                type: array
+                default: null
+          description: Exercise usage summaries.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+      summary: List distinct exercise names used by the authenticated user.
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/exercise-logs/{exerciseLogId}:
+    get:
+      operationId: getExerciseLog
+      parameters:
+      - explode: false
+        in: path
+        name: exerciseLogId
+        required: true
+        schema:
+          format: int64
+          minimum: 1
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExerciseLog"
+          description: Exercise log.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      summary: Get one exercise log owned by the authenticated user.
+      x-accepts:
+      - application/json
+      - application/problem+json
+    parameters:
+    - explode: false
+      in: path
+      name: exerciseLogId
+      required: true
+      schema:
+        format: int64
+        minimum: 1
+        type: integer
+      style: simple
+components:
+  parameters:
+    Limit:
+      explode: true
+      in: query
+      name: limit
+      required: false
+      schema:
+        default: 20
+        maximum: 100
+        minimum: 1
+        type: integer
+      style: form
+    Cursor:
+      explode: true
+      in: query
+      name: cursor
+      required: false
+      schema:
+        type: string
+      style: form
+  responses:
+    BadRequest:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Invalid request.
+    Unauthorized:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: "Missing, invalid, expired, or unacceptable access token."
+    NotFound:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Exercise log does not exist or is not owned by the authenticated
+        principal.
+  schemas:
+    CreateExerciseLogRequest:
+      additionalProperties: false
+      example:
+        exerciseName: exerciseName
+        loggedAt: 2000-01-23T04:56:07.000+00:00
+        sets:
+        - setNumber: 2624
+          weightKg: 0.6027456183070403
+          reps: 4803
+        - setNumber: 2624
+          weightKg: 0.6027456183070403
+          reps: 4803
+        - setNumber: 2624
+          weightKg: 0.6027456183070403
+          reps: 4803
+        - setNumber: 2624
+          weightKg: 0.6027456183070403
+          reps: 4803
+        - setNumber: 2624
+          weightKg: 0.6027456183070403
+          reps: 4803
+      properties:
+        exerciseName:
+          maxLength: 120
+          minLength: 1
+          pattern: .*\S.*
+          type: string
+        loggedAt:
+          description: Optional client-observed workout time. Server uses current
+            time when omitted.
+          format: date-time
+          type: string
+        sets:
+          items:
+            $ref: "#/components/schemas/ExerciseSetRequest"
+          maxItems: 100
+          minItems: 1
+          type: array
+          default: null
+      required:
+      - exerciseName
+      - sets
+    ExerciseSetRequest:
+      additionalProperties: false
+      example:
+        setNumber: 2624
+        weightKg: 0.6027456183070403
+        reps: 4803
+      properties:
+        setNumber:
+          maximum: 32767
+          minimum: 1
+          type: integer
+        weightKg:
+          minimum: 0
+          multipleOf: 0.01
+          type: number
+        reps:
+          maximum: 32767
+          minimum: 1
+          type: integer
+      required:
+      - reps
+      - setNumber
+      - weightKg
+    ExerciseLog:
+      additionalProperties: false
+      example:
+        id: 0
+        exerciseName: exerciseName
+        loggedAt: 2000-01-23T04:56:07.000+00:00
+        sets:
+        - id: 6
+          setNumber: 1
+          weightKg: 5.962133916683182
+          reps: 5
+          volumeKg: 2.3021358869347655
+        - id: 6
+          setNumber: 1
+          weightKg: 5.962133916683182
+          reps: 5
+          volumeKg: 2.3021358869347655
+        highestSetVolumeKg: 7.061401241503109
+      properties:
+        id:
+          format: int64
+          type: integer
+        exerciseName:
+          type: string
+        loggedAt:
+          format: date-time
+          type: string
+        sets:
+          items:
+            $ref: "#/components/schemas/ExerciseSet"
+          type: array
+          default: null
+        highestSetVolumeKg:
+          description: Maximum weightKg multiplied by reps among the log's sets.
+          type: number
+      required:
+      - exerciseName
+      - highestSetVolumeKg
+      - id
+      - loggedAt
+      - sets
+    ExerciseSet:
+      additionalProperties: false
+      example:
+        id: 6
+        setNumber: 1
+        weightKg: 5.962133916683182
+        reps: 5
+        volumeKg: 2.3021358869347655
+      properties:
+        id:
+          format: int64
+          type: integer
+        setNumber:
+          type: integer
+        weightKg:
+          type: number
+        reps:
+          type: integer
+        volumeKg:
+          type: number
+      required:
+      - id
+      - reps
+      - setNumber
+      - volumeKg
+      - weightKg
+    ExerciseLogPage:
+      additionalProperties: false
+      example:
+        items:
+        - id: 0
+          exerciseName: exerciseName
+          loggedAt: 2000-01-23T04:56:07.000+00:00
+          sets:
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          highestSetVolumeKg: 7.061401241503109
+        - id: 0
+          exerciseName: exerciseName
+          loggedAt: 2000-01-23T04:56:07.000+00:00
+          sets:
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          highestSetVolumeKg: 7.061401241503109
+        nextCursor: nextCursor
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/ExerciseLog"
+          type: array
+          default: null
+        nextCursor:
+          nullable: true
+          type: string
+      required:
+      - items
+      - nextCursor
+    ExerciseSummary:
+      additionalProperties: false
+      example:
+        exerciseName: exerciseName
+        logCount: 1
+        lastLoggedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        exerciseName:
+          type: string
+        logCount:
+          minimum: 1
+          type: integer
+        lastLoggedAt:
+          format: date-time
+          type: string
+      required:
+      - exerciseName
+      - lastLoggedAt
+      - logCount
+    Problem:
+      properties:
+        type:
+          format: uri-reference
+          type: string
+        title:
+          type: string
+        status:
+          maximum: 599
+          minimum: 400
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+        violations:
+          items:
+            $ref: "#/components/schemas/Problem_violations_inner"
+          type: array
+          default: null
+      required:
+      - code
+      - detail
+      - status
+      - title
+      - type
+    Problem_violations_inner:
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+      required:
+      - field
+      - message
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+

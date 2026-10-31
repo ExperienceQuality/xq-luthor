@@ -37,12 +37,17 @@ Rules for everything under `openapi/` and `database_schema/`. Contracts are the 
 - `nodejs` clients publish as npm packages to GitHub Packages (`npm.pkg.github.com`).
 - `java` clients publish as Maven artifacts to GitHub Packages (`maven.pkg.github.com`).
 - Published package versions match the contract version dir.
-- `python` clients install directly from this repo's git tags via `uv` — no registry involved:
-  `uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@<tag>#subdirectory=<package-dir>'`
-- Tag scheme: `py/<package-name>/<semver>` (e.g. `py/xq-example-client/1.0.0`), where `<package-name>` is the package's `pyproject.toml` `name` and `<semver>` its `version`. For OpenAPI clients, `<semver>` is the contract version dir minus the `v` prefix. `database_schema` clients version independently of OpenAPI versions. One tag per package release lets one repo host multiple packages at independent versions.
+- `python` clients distribute as built `wheel` + `sdist` assets on a GitHub Release — no registry involved (GitHub Packages has no PyPI endpoint):
+  `uv pip install 'https://github.com/ExperienceQuality/xq-luthor/releases/download/<tag>/<package>-<semver>-py3-none-any.whl'`
+- Tag/release scheme: `py/<package-name>/<semver>` (e.g. `py/xq-example-client/1.0.0`), where `<package-name>` is the package's `pyproject.toml` `name` and `<semver>` its `version`. For OpenAPI clients, `<semver>` is the contract version dir minus the `v` prefix. `database_schema` clients version independently of OpenAPI versions. One tag per package release lets one repo host multiple packages at independent versions.
+- Python release procedure (run after the contract+clients PR merges and the `py/` tag is pushed):
+  1. `uv build --out-dir <dist-dir> <package-dir>` — emits `<pkg>-<semver>.tar.gz` and `<pkg>-<semver>-py3-none-any.whl`.
+  2. `gh release create <tag> <dist-dir>/* --title "<package-name> <semver>" --generate-notes` — attaches both assets to the tag's release.
+  3. Verify: `uv pip install '<release-asset-wheel-url>'` in a scratch venv.
 - Examples:
-  - `uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@py/xq-example-client/1.0.0#subdirectory=openapi/example/v1.0.0/python'`
-  - `uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@py/xq-db-client/0.1.0#subdirectory=database_schema/python'`
+  - `uv pip install 'https://github.com/ExperienceQuality/xq-luthor/releases/download/py/xq-example-client/1.0.0/xq_example_client-1.0.0-py3-none-any.whl'`
+  - `uv pip install 'https://github.com/ExperienceQuality/xq-luthor/releases/download/py/xq-db-client/0.1.0/xq_db_client-0.1.0-py3-none-any.whl'`
+  - Fallback (no release needed, builds from source): `uv pip install 'git+https://github.com/ExperienceQuality/xq-luthor@<tag>#subdirectory=<package-dir>'`
 
 ## Consuming clients
 
@@ -51,7 +56,7 @@ GitHub Packages requires a token to install npm and Maven packages, even public 
 - locally: a classic personal access token with `read:packages`;
 - in a consumer repo's GitHub Actions: the built-in `GITHUB_TOKEN` with `permissions: packages: read`. If a package is private, also grant the consumer repo access under the package's *Package settings → Manage Actions access*.
 
-Python clients need no token (git install from this public repo; see [Distribution](#distribution)).
+Python clients need no token (public repo release assets and git tags; see [Distribution](#distribution)). If the repo ever goes private, release-asset URLs and git installs both require repo access — prefer the git+ssh form then.
 
 ### Java (Maven)
 

@@ -1,0 +1,1355 @@
+openapi: 3.1.0
+info:
+  description: |
+    Miniapp-facing backend-for-frontend. Composes Routine Service and Exercise Service. Does not own or persist fitness domain data.
+  title: Fitness BFF API
+  version: 1.0.0
+servers:
+- url: /
+security:
+- bearerAuth: []
+paths:
+  /api/v1/me:
+    get:
+      operationId: getCurrentUser
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getCurrentUser_200_response"
+          description: Authenticated identity claims safe for client display.
+      summary: Return minimal authenticated principal information.
+      x-accepts:
+      - application/json
+  /api/v1/routines:
+    get:
+      operationId: listRoutines
+      parameters:
+      - $ref: "#/components/parameters/Limit"
+      - $ref: "#/components/parameters/Cursor"
+      - explode: true
+        in: query
+        name: includeArchived
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoutinePage"
+          description: Routine page from Routine Service.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-accepts:
+      - application/json
+      - application/problem+json
+    post:
+      operationId: createRoutine
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoutineCreate"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+          description: Routine created by Routine Service.
+          headers:
+            Location:
+              explode: false
+              required: true
+              schema:
+                format: uri-reference
+                type: string
+              style: simple
+            ETag:
+              explode: false
+              required: true
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/routines/{routineId}:
+    delete:
+      operationId: archiveRoutine
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      responses:
+        "204":
+          description: Routine archived.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "428":
+          $ref: "#/components/responses/PreconditionRequired"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-accepts:
+      - application/problem+json
+    get:
+      operationId: getRoutine
+      parameters:
+      - $ref: "#/components/parameters/RoutineId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+          description: Routine from Routine Service.
+          headers:
+            ETag:
+              explode: false
+              schema:
+                type: string
+              style: simple
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-accepts:
+      - application/json
+      - application/problem+json
+    parameters:
+    - $ref: "#/components/parameters/RoutineId"
+    patch:
+      operationId: updateRoutine
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: "#/components/schemas/RoutinePatch"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Routine"
+          description: Updated routine.
+          headers:
+            ETag:
+              explode: false
+              required: true
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "428":
+          $ref: "#/components/responses/PreconditionRequired"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-content-type: application/merge-patch+json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/routines/{routineId}/sessions:
+    parameters:
+    - $ref: "#/components/parameters/RoutineId"
+    post:
+      operationId: addSession
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionWrite"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+          description: Session created.
+          headers:
+            ETag:
+              explode: false
+              required: true
+              schema:
+                type: string
+              style: simple
+            Location:
+              explode: false
+              required: true
+              schema:
+                format: uri-reference
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "428":
+          $ref: "#/components/responses/PreconditionRequired"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/routines/{routineId}/sessions/{sessionId}:
+    delete:
+      operationId: deleteSession
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      - $ref: "#/components/parameters/SessionId"
+      responses:
+        "204":
+          description: Session deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "428":
+          $ref: "#/components/responses/PreconditionRequired"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-accepts:
+      - application/problem+json
+    get:
+      operationId: getSession
+      parameters:
+      - $ref: "#/components/parameters/RoutineId"
+      - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+          description: Session prescription.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-accepts:
+      - application/json
+      - application/problem+json
+    parameters:
+    - $ref: "#/components/parameters/RoutineId"
+    - $ref: "#/components/parameters/SessionId"
+    put:
+      operationId: replaceSession
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - $ref: "#/components/parameters/RoutineId"
+      - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionWrite"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+          description: Session replaced.
+          headers:
+            ETag:
+              explode: false
+              required: true
+              schema:
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "428":
+          $ref: "#/components/responses/PreconditionRequired"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/routines/{routineId}/sessions/{sessionId}/view:
+    get:
+      operationId: getSessionView
+      parameters:
+      - $ref: "#/components/parameters/HistoryLimit"
+      - $ref: "#/components/parameters/RoutineId"
+      - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionView"
+          description: Session view composed from Routine Service exercise-records.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      summary: Compose a session prescription and recent exercise history.
+      x-accepts:
+      - application/json
+      - application/problem+json
+    parameters:
+    - $ref: "#/components/parameters/RoutineId"
+    - $ref: "#/components/parameters/SessionId"
+  /api/v1/routines/{routineId}/snapshots:
+    get:
+      operationId: listSnapshots
+      parameters:
+      - $ref: "#/components/parameters/RoutineId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/Snapshot"
+                maxItems: 2
+                type: array
+                default: null
+          description: Up to two routine snapshots.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-accepts:
+      - application/json
+      - application/problem+json
+    parameters:
+    - $ref: "#/components/parameters/RoutineId"
+    post:
+      operationId: captureSnapshot
+      parameters:
+      - $ref: "#/components/parameters/IfMatch"
+      - explode: false
+        in: header
+        name: Idempotency-Key
+        required: true
+        schema:
+          maxLength: 128
+          minLength: 8
+          type: string
+        style: simple
+      - $ref: "#/components/parameters/RoutineId"
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Snapshot"
+          description: Snapshot captured.
+          headers:
+            ETag:
+              explode: false
+              required: true
+              schema:
+                type: string
+              style: simple
+            Location:
+              explode: false
+              required: true
+              schema:
+                format: uri-reference
+                type: string
+              style: simple
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
+        "428":
+          $ref: "#/components/responses/PreconditionRequired"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/exercise-logs:
+    get:
+      operationId: listExerciseLogs
+      parameters:
+      - explode: true
+        in: query
+        name: exerciseName
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: loggedAt
+          enum:
+          - loggedAt
+          - highestSetVolume
+          type: string
+        style: form
+      - $ref: "#/components/parameters/Limit"
+      - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExerciseLogPage"
+          description: Exercise log page.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-accepts:
+      - application/json
+      - application/problem+json
+    post:
+      operationId: createExerciseLog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExerciseLogRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExerciseLog"
+          description: Exercise log created.
+          headers:
+            Location:
+              explode: false
+              required: true
+              schema:
+                format: uri-reference
+                type: string
+              style: simple
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      - application/problem+json
+  /api/v1/exercises:
+    get:
+      operationId: listExercises
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/ExerciseSummary"
+                type: array
+                default: null
+          description: Distinct exercises.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+      summary: List distinct exercise names from the user's log history.
+      x-accepts:
+      - application/json
+      - application/problem+json
+components:
+  parameters:
+    RoutineId:
+      explode: false
+      in: path
+      name: routineId
+      required: true
+      schema:
+        format: uuid
+        type: string
+      style: simple
+    SessionId:
+      explode: false
+      in: path
+      name: sessionId
+      required: true
+      schema:
+        format: uuid
+        type: string
+      style: simple
+    Limit:
+      explode: true
+      in: query
+      name: limit
+      required: false
+      schema:
+        default: 20
+        maximum: 100
+        minimum: 1
+        type: integer
+      style: form
+    HistoryLimit:
+      explode: true
+      in: query
+      name: historyLimit
+      required: false
+      schema:
+        default: 5
+        maximum: 20
+        minimum: 1
+        type: integer
+      style: form
+    Cursor:
+      explode: true
+      in: query
+      name: cursor
+      required: false
+      schema:
+        type: string
+      style: form
+    IfMatch:
+      explode: false
+      in: header
+      name: If-Match
+      required: true
+      schema:
+        type: string
+      style: simple
+  responses:
+    BadRequest:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Invalid request.
+    Unauthorized:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: "Missing, invalid, expired, or unacceptable access token."
+    NotFound:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Resource not found or inaccessible.
+    Conflict:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Domain conflict.
+    PreconditionFailed:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: ETag precondition failed.
+    PreconditionRequired:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: If-Match is required.
+    BadGateway:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Downstream response invalid or contract-incompatible.
+    ServiceUnavailable:
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+      description: Required downstream service unavailable.
+  schemas:
+    RoutineCreate:
+      additionalProperties: false
+      example:
+        name: name
+        notes: notes
+      properties:
+        name:
+          maxLength: 120
+          minLength: 1
+          type: string
+        notes:
+          maxLength: 2000
+          nullable: true
+          type: string
+      required:
+      - name
+    RoutinePatch:
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          maxLength: 120
+          minLength: 1
+          type: string
+        notes:
+          maxLength: 2000
+          nullable: true
+          type: string
+    Routine:
+      example:
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        name: name
+        notes: notes
+        archivedAt: 2000-01-23T04:56:07.000+00:00
+        version: 1
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+        sessions:
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          name: name
+          position: 6
+          exercises:
+          - name: name
+            sets: 1
+            repetitions: 5
+            weightKg: 5.637376656633329
+          - name: name
+            sets: 1
+            repetitions: 5
+            weightKg: 5.637376656633329
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          name: name
+          position: 6
+          exercises:
+          - name: name
+            sets: 1
+            repetitions: 5
+            weightKg: 5.637376656633329
+          - name: name
+            sets: 1
+            repetitions: 5
+            weightKg: 5.637376656633329
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        notes:
+          nullable: true
+          type: string
+        archivedAt:
+          format: date-time
+          nullable: true
+          type: string
+        version:
+          minimum: 1
+          type: integer
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        sessions:
+          items:
+            $ref: "#/components/schemas/Session"
+          type: array
+          default: null
+      required:
+      - createdAt
+      - id
+      - name
+      - sessions
+      - updatedAt
+      - version
+    RoutinePage:
+      example:
+        items:
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          name: name
+          notes: notes
+          version: 0
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+          archivedAt: 2000-01-23T04:56:07.000+00:00
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          name: name
+          notes: notes
+          version: 0
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+          archivedAt: 2000-01-23T04:56:07.000+00:00
+        nextCursor: nextCursor
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/RoutinePage_items_inner"
+          type: array
+          default: null
+        nextCursor:
+          nullable: true
+          type: string
+      required:
+      - items
+      - nextCursor
+    SessionWrite:
+      additionalProperties: false
+      example:
+        name: name
+        position: 0
+        exercises:
+        - name: name
+          sets: 1
+          repetitions: 5
+          weightKg: 5.637376656633329
+        - name: name
+          sets: 1
+          repetitions: 5
+          weightKg: 5.637376656633329
+        - name: name
+          sets: 1
+          repetitions: 5
+          weightKg: 5.637376656633329
+        - name: name
+          sets: 1
+          repetitions: 5
+          weightKg: 5.637376656633329
+        - name: name
+          sets: 1
+          repetitions: 5
+          weightKg: 5.637376656633329
+      properties:
+        name:
+          maxLength: 120
+          minLength: 1
+          type: string
+        position:
+          minimum: 0
+          type: integer
+        exercises:
+          items:
+            $ref: "#/components/schemas/ExercisePrescription"
+          maxItems: 50
+          type: array
+          default: null
+      required:
+      - exercises
+      - name
+      - position
+    Session:
+      example:
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        name: name
+        position: 6
+        exercises:
+        - name: name
+          sets: 1
+          repetitions: 5
+          weightKg: 5.637376656633329
+        - name: name
+          sets: 1
+          repetitions: 5
+          weightKg: 5.637376656633329
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        position:
+          type: integer
+        exercises:
+          items:
+            $ref: "#/components/schemas/ExercisePrescription"
+          type: array
+          default: null
+      required:
+      - exercises
+      - id
+      - name
+      - position
+    ExercisePrescription:
+      example:
+        name: name
+        sets: 1
+        repetitions: 5
+        weightKg: 5.637376656633329
+      properties:
+        name:
+          type: string
+        sets:
+          type: integer
+        repetitions:
+          type: integer
+        weightKg:
+          type: number
+      required:
+      - name
+      - repetitions
+      - sets
+      - weightKg
+    Snapshot:
+      example:
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        capturedAt: 2000-01-23T04:56:07.000+00:00
+        entries:
+        - name: name
+          sets: 0
+          repetitions: 6
+          weightKg: 1.4658129805029452
+          repetitionsProgress: first
+          weightProgress: first
+        - name: name
+          sets: 0
+          repetitions: 6
+          weightKg: 1.4658129805029452
+          repetitionsProgress: first
+          weightProgress: first
+      properties:
+        id:
+          format: uuid
+          type: string
+        capturedAt:
+          format: date-time
+          type: string
+        entries:
+          items:
+            $ref: "#/components/schemas/Snapshot_entries_inner"
+          type: array
+          default: null
+      required:
+      - capturedAt
+      - entries
+      - id
+    SessionView:
+      example:
+        routineId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        session:
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          name: name
+          position: 6
+          exercises:
+          - name: name
+            sets: 1
+            repetitions: 5
+            weightKg: 5.637376656633329
+          - name: name
+            sets: 1
+            repetitions: 5
+            weightKg: 5.637376656633329
+        exerciseHistory:
+        - exerciseName: exerciseName
+          logs:
+          - id: 0
+            exerciseName: exerciseName
+            loggedAt: 2000-01-23T04:56:07.000+00:00
+            sets:
+            - id: 6
+              setNumber: 1
+              weightKg: 5.962133916683182
+              reps: 5
+              volumeKg: 2.3021358869347655
+            - id: 6
+              setNumber: 1
+              weightKg: 5.962133916683182
+              reps: 5
+              volumeKg: 2.3021358869347655
+            highestSetVolumeKg: 7.061401241503109
+          - id: 0
+            exerciseName: exerciseName
+            loggedAt: 2000-01-23T04:56:07.000+00:00
+            sets:
+            - id: 6
+              setNumber: 1
+              weightKg: 5.962133916683182
+              reps: 5
+              volumeKg: 2.3021358869347655
+            - id: 6
+              setNumber: 1
+              weightKg: 5.962133916683182
+              reps: 5
+              volumeKg: 2.3021358869347655
+            highestSetVolumeKg: 7.061401241503109
+        - exerciseName: exerciseName
+          logs:
+          - id: 0
+            exerciseName: exerciseName
+            loggedAt: 2000-01-23T04:56:07.000+00:00
+            sets:
+            - id: 6
+              setNumber: 1
+              weightKg: 5.962133916683182
+              reps: 5
+              volumeKg: 2.3021358869347655
+            - id: 6
+              setNumber: 1
+              weightKg: 5.962133916683182
+              reps: 5
+              volumeKg: 2.3021358869347655
+            highestSetVolumeKg: 7.061401241503109
+          - id: 0
+            exerciseName: exerciseName
+            loggedAt: 2000-01-23T04:56:07.000+00:00
+            sets:
+            - id: 6
+              setNumber: 1
+              weightKg: 5.962133916683182
+              reps: 5
+              volumeKg: 2.3021358869347655
+            - id: 6
+              setNumber: 1
+              weightKg: 5.962133916683182
+              reps: 5
+              volumeKg: 2.3021358869347655
+            highestSetVolumeKg: 7.061401241503109
+      properties:
+        routineId:
+          format: uuid
+          type: string
+        session:
+          $ref: "#/components/schemas/Session"
+        exerciseHistory:
+          items:
+            $ref: "#/components/schemas/ExerciseHistoryByName"
+          type: array
+          default: null
+      required:
+      - exerciseHistory
+      - routineId
+      - session
+    ExerciseHistoryByName:
+      example:
+        exerciseName: exerciseName
+        logs:
+        - id: 0
+          exerciseName: exerciseName
+          loggedAt: 2000-01-23T04:56:07.000+00:00
+          sets:
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          highestSetVolumeKg: 7.061401241503109
+        - id: 0
+          exerciseName: exerciseName
+          loggedAt: 2000-01-23T04:56:07.000+00:00
+          sets:
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          highestSetVolumeKg: 7.061401241503109
+      properties:
+        exerciseName:
+          type: string
+        logs:
+          items:
+            $ref: "#/components/schemas/ExerciseLog"
+          type: array
+          default: null
+      required:
+      - exerciseName
+      - logs
+    CreateExerciseLogRequest:
+      additionalProperties: false
+      example:
+        exerciseName: exerciseName
+        loggedAt: 2000-01-23T04:56:07.000+00:00
+        sets:
+        - setNumber: 1
+          weightKg: 0.6027456183070403
+          reps: 1
+        - setNumber: 1
+          weightKg: 0.6027456183070403
+          reps: 1
+      properties:
+        exerciseName:
+          maxLength: 120
+          minLength: 1
+          type: string
+        loggedAt:
+          format: date-time
+          type: string
+        sets:
+          items:
+            $ref: "#/components/schemas/CreateExerciseLogRequest_sets_inner"
+          minItems: 1
+          type: array
+          default: null
+      required:
+      - exerciseName
+      - sets
+    ExerciseLog:
+      example:
+        id: 0
+        exerciseName: exerciseName
+        loggedAt: 2000-01-23T04:56:07.000+00:00
+        sets:
+        - id: 6
+          setNumber: 1
+          weightKg: 5.962133916683182
+          reps: 5
+          volumeKg: 2.3021358869347655
+        - id: 6
+          setNumber: 1
+          weightKg: 5.962133916683182
+          reps: 5
+          volumeKg: 2.3021358869347655
+        highestSetVolumeKg: 7.061401241503109
+      properties:
+        id:
+          format: int64
+          type: integer
+        exerciseName:
+          type: string
+        loggedAt:
+          format: date-time
+          type: string
+        sets:
+          items:
+            $ref: "#/components/schemas/ExerciseLog_sets_inner"
+          type: array
+          default: null
+        highestSetVolumeKg:
+          type: number
+      required:
+      - exerciseName
+      - highestSetVolumeKg
+      - id
+      - loggedAt
+      - sets
+    ExerciseLogPage:
+      example:
+        items:
+        - id: 0
+          exerciseName: exerciseName
+          loggedAt: 2000-01-23T04:56:07.000+00:00
+          sets:
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          highestSetVolumeKg: 7.061401241503109
+        - id: 0
+          exerciseName: exerciseName
+          loggedAt: 2000-01-23T04:56:07.000+00:00
+          sets:
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          - id: 6
+            setNumber: 1
+            weightKg: 5.962133916683182
+            reps: 5
+            volumeKg: 2.3021358869347655
+          highestSetVolumeKg: 7.061401241503109
+        nextCursor: nextCursor
+      properties:
+        items:
+          items:
+            $ref: "#/components/schemas/ExerciseLog"
+          type: array
+          default: null
+        nextCursor:
+          nullable: true
+          type: string
+      required:
+      - items
+      - nextCursor
+    ExerciseSummary:
+      example:
+        exerciseName: exerciseName
+        logCount: 0
+        lastLoggedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        exerciseName:
+          type: string
+        logCount:
+          type: integer
+        lastLoggedAt:
+          format: date-time
+          type: string
+      required:
+      - exerciseName
+      - lastLoggedAt
+      - logCount
+    Problem:
+      properties:
+        type:
+          format: uri-reference
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+        violations:
+          items:
+            $ref: "#/components/schemas/Problem_violations_inner"
+          type: array
+          default: null
+      required:
+      - code
+      - detail
+      - status
+      - title
+      - type
+    getCurrentUser_200_response:
+      example:
+        subject: subject
+        displayName: displayName
+      properties:
+        subject:
+          type: string
+        displayName:
+          nullable: true
+          type: string
+      required:
+      - subject
+    RoutinePage_items_inner:
+      example:
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        name: name
+        notes: notes
+        version: 0
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+        archivedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          format: uuid
+          type: string
+        name:
+          type: string
+        notes:
+          nullable: true
+          type: string
+        version:
+          type: integer
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        archivedAt:
+          format: date-time
+          nullable: true
+          type: string
+      required:
+      - createdAt
+      - id
+      - name
+      - updatedAt
+      - version
+    Snapshot_entries_inner:
+      example:
+        name: name
+        sets: 0
+        repetitions: 6
+        weightKg: 1.4658129805029452
+        repetitionsProgress: first
+        weightProgress: first
+      properties:
+        name:
+          type: string
+        sets:
+          type: integer
+        repetitions:
+          type: integer
+        weightKg:
+          type: number
+        repetitionsProgress:
+          enum:
+          - first
+          - increased
+          - decreased
+          - same
+          type: string
+        weightProgress:
+          enum:
+          - first
+          - increased
+          - decreased
+          - same
+          type: string
+      required:
+      - name
+      - repetitions
+      - repetitionsProgress
+      - sets
+      - weightKg
+      - weightProgress
+    CreateExerciseLogRequest_sets_inner:
+      example:
+        setNumber: 1
+        weightKg: 0.6027456183070403
+        reps: 1
+      properties:
+        setNumber:
+          minimum: 1
+          type: integer
+        weightKg:
+          minimum: 0
+          multipleOf: 0.01
+          type: number
+        reps:
+          minimum: 1
+          type: integer
+      required:
+      - reps
+      - setNumber
+      - weightKg
+    ExerciseLog_sets_inner:
+      example:
+        id: 6
+        setNumber: 1
+        weightKg: 5.962133916683182
+        reps: 5
+        volumeKg: 2.3021358869347655
+      properties:
+        id:
+          format: int64
+          type: integer
+        setNumber:
+          type: integer
+        weightKg:
+          type: number
+        reps:
+          type: integer
+        volumeKg:
+          type: number
+      required:
+      - id
+      - reps
+      - setNumber
+      - volumeKg
+      - weightKg
+    Problem_violations_inner:
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+      required:
+      - field
+      - message
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+

@@ -144,6 +144,8 @@
 **Dependencies:** Task 5
 **Estimated scope:** S
 
+> **Post-completion refinement (2026-10-31):** primary distribution moved to built wheel/sdist assets on GitHub Releases keyed by the same `py/<pkg>/<semver>` tags; git-tag subdirectory install kept as documented fallback. See `docs/contracts-conventions.md` (Distribution).
+
 ## Checkpoint: Distribution
 - [x] One client per language consumed from its distribution channel
 

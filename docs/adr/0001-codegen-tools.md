@@ -11,7 +11,8 @@ need no codegen toolchain (README.md, tasks/plan.md). Two artifact types feed si
 generation cells:
 
 - `openapi/<service>/openapi.yaml` → nodejs, python, java clients (published via npm /
-  Maven on GitHub Packages, and `uv` git install respectively).
+  Maven on GitHub Packages, and GitHub Release wheel/sdist assets respectively;
+  `uv` git-tag install retained as source fallback).
 - `database_schema/schema.sql` → nodejs, python, java database access code.
 
 Hard constraints:
