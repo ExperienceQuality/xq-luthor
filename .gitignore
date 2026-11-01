@@ -12,6 +12,5 @@ wheels/
 # Codegen toolchain downloads (pinned, fetched on demand by scripts/)
 tools/
 
-# xq-squad release artifacts (re-fetch via `gh release download`)
-squad-*.tar.gz
-squad-*.tar.gz.sha256
+# XQ Squad concurrent-delivery runtime worktrees
+.squad/worktrees/
