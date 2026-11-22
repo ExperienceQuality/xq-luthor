@@ -13,7 +13,9 @@ permissions:
 
 jobs:
   contracts:
-    runs-on: ubuntu-latest
+    # Pin until postgresql-binaries (used by scripts/pg-ephemeral.py) runs on
+    # ubuntu-26.04 / ubuntu-latest without missing libxml2.so.2.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
