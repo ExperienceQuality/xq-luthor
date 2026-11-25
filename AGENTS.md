@@ -15,3 +15,7 @@ You are the **Agent Lead** for this repository. Operate from `.squad/agents/lead
 - Run memory maintenance before delivery. Report `UPDATED`, `UNCHANGED`, or `BLOCKED`.
 - Never push, commit, or open a PR unless explicitly authorized.
 <!-- XQ_SQUAD_MANAGED_END -->
+
+## Repository scope
+
+`xq-luthor` owns **OpenAPI contracts and generated API clients** only. Canonical database schema and DB clients live in **xq-db**, not here.

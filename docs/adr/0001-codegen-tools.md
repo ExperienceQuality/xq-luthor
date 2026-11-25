@@ -1,35 +1,25 @@
-# ADR 0001: Codegen tool selection for contract pipelines
+# ADR 0001: Codegen tool selection for OpenAPI client pipelines
 
 Status: Accepted — approved at Foundation checkpoint.
 
-> **Amendment (Phase 2):** The ephemeral Postgres preamble (`scripts/pg-ephemeral.sh` → `scripts/pg-ephemeral.py`) was updated from a Docker container to embedded `postgresql-binaries==16.15.0` invoked via `uv`. All three SQL DDL codegen pipelines introspect a real, version-pinned PostgreSQL 16.15.0 cluster with zero Docker dependency.
+> **Amendment (2026-11-25, GH issue #11):** Database schema and DB client codegen were removed from `xq-luthor`. Canonical PostgreSQL DDL and DB clients belong to **xq-db** (ADR-001 there). This ADR now covers **OpenAPI → client** pipelines only.
 
 ## Context
 
-`xq-luthor` commits generated clients alongside hand-authored contracts so consumers
-need no codegen toolchain (README.md, tasks/plan.md). Two artifact types feed six
-generation cells:
+`xq-luthor` commits generated clients alongside hand-authored OpenAPI contracts so consumers
+need no codegen toolchain (README.md). One artifact type feeds three generation cells per
+service version:
 
 - `openapi/<service>/openapi.yaml` → nodejs, python, java clients (published via npm /
   Maven on GitHub Packages, and GitHub Release wheel/sdist assets respectively;
   `uv` git-tag install retained as source fallback).
-- `database_schema/schema.sql` → nodejs, python, java database access code.
 
 Hard constraints:
 
 1. **Deterministic regeneration** (docs/contracts-conventions.md): same contract +
    same pinned tool = byte-identical output. The Task 8 gate diffs a fresh regen
-   against committed output, so tool versions must be pinned exactly, and any tool
-   that introspects a database must introspect a *pinned-version* ephemeral
-   PostgreSQL instance.
-2. **The DDL input is a bare `.sql` file, not a live database.** Most mature
-   schema-codegen tools introspect a running Postgres. Where a tool requires that,
-   the pipeline gains a standard preamble: start an ephemeral PostgreSQL container
-   (pinned image tag/digest), apply `schema.sql`, then run the introspecting
-   generator. This is preferable to DDL-simulation modes, which silently mishandle
-   PostgreSQL-specific syntax (extensions, `gen_random_uuid()`, `TIMESTAMPTZ`,
-   domains, partial indexes).
-3. No version numbers are asserted in this ADR. At pipeline-build time, each tool is
+   against committed output, so tool versions must be pinned exactly.
+2. No version numbers are asserted in this ADR. At pipeline-build time, each tool is
    pinned to its **latest stable release**, the resolved version is recorded in a
    committed lockfile/manifest, and all regeneration uses that pin until a
    deliberate upgrade PR bumps it.
@@ -41,9 +31,6 @@ Hard constraints:
 | OpenAPI | nodejs | **openapi-typescript** (types) + **openapi-fetch** (runtime) | `openapi.yaml` directly | npm devDependency + committed `package-lock.json` in the pipeline workspace |
 | OpenAPI | python | **openapi-python-client** | `openapi.yaml` directly | `uv` pinned run (`uv tool run` with `==` pin or locked via `uv.lock`); pin recorded in pipeline manifest |
 | OpenAPI | java | **openapi-generator** `java` generator, `library=okhttp-gson` | `openapi.yaml` directly | Pin generator release (Maven plugin version or CLI jar/container image digest) + JDK toolchain version |
-| SQL DDL | nodejs | **kysely-codegen** → Kysely type definitions | Ephemeral Postgres (apply `schema.sql`, then introspect) | npm pin + lockfile; pin `postgres:<tag>` image digest |
-| SQL DDL | python | **sqlacodegen** → SQLAlchemy models (declarative; `--generator sqlmodel`/`dataclasses` variants available) | Ephemeral Postgres | uv/pip `==` pin + `uv.lock`; pin postgres image digest |
-| SQL DDL | java | **jOOQ codegen** (`jooq-codegen-maven`) | Ephemeral Postgres via Testcontainers/Docker — **not** `DDLDatabase` | Maven plugin version pin; pin postgres image digest; pin JDK |
 
 ### OpenAPI → nodejs: openapi-typescript + openapi-fetch
 
@@ -67,7 +54,7 @@ Hard constraints:
 
 - Generates a complete, self-contained Python package (httpx-based client + typed
   models) with its own `pyproject.toml` — aligns directly with the `uv` git-install
-  distribution model (Task 11) with minimal packaging glue.
+  distribution model with minimal packaging glue.
 - MIT-licensed, actively maintained, purpose-built for client generation rather than
   models only.
 - Rejected: **openapi-generator `python`** — generated code is verbose and
@@ -91,88 +78,23 @@ Hard constraints:
   (templates change). Pin the exact release and the JDK; the regen-diff gate will
   flag any unplanned bump.
 
-### SQL DDL → nodejs: kysely-codegen (with ephemeral Postgres)
-
-- Produces Kysely `Database` interfaces — types only, no runtime lock-in; consumers
-  bring Kysely (permissively licensed, MIT) themselves. Smallest possible committed
-  artifact, clean diffs.
-- **Honest flag:** kysely-codegen introspects a **live database**; it cannot parse a
-  `.sql` file. Required workaround: pipeline spins a pinned `postgres` container,
-  applies `schema.sql`, runs codegen against it. No mature pure-DDL parser
-  alternative exists for Kysely types, so the ephemeral-DB step is the honest cost.
-- Rejected: **pgtyped** — also needs a live DB, and it types *queries written in
-  `.sql`/`.ts` files*, not the schema itself. Wrong input shape for this repo (we
-  have DDL, not an authored query corpus). Revisit if a query file convention
-  emerges.
-- Rejected: **Drizzle introspection (`drizzle-kit pull`)** — needs a live DB too, and
-  commits consumers to the Drizzle ORM rather than emitting neutral types. Heavier
-  opinion than a contract hub should impose.
-
-### SQL DDL → python: sqlacodegen (with ephemeral Postgres)
-
-- Emits SQLAlchemy declarative models from introspection; newer releases also offer
-  `dataclasses` and `sqlmodel` generators, leaving the model style flexible without
-  changing the pipeline.
-- **Honest flag:** sqlacodegen introspects a **live database** — same ephemeral-
-  Postgres preamble as the nodejs cell.
-- Rejected: **SQLAlchemy `automap`/runtime reflection** — reflects at runtime against
-  a live DB; produces no committed artifact, violating the committed-generated-code
-  and determinism requirements.
-- Rejected: **hand-written models** — violates docs/contracts-conventions.md
-  (generated dirs never hand-edited) and guarantees drift from `schema.sql`.
-- Alternative noted: a custom DDL parser (e.g., sqlglot-based) could skip the
-  ephemeral DB, but writing/maintaining our own parser contradicts "pick boring,
-  maintained tools" (tasks/plan.md).
-
-### SQL DDL → java: jOOQ codegen (with ephemeral Postgres / Testcontainers)
-
-- Industry-standard for typed SQL in Java; generates table/record/POJO classes and a
-  catalog/dsl API. Maven-native (`jooq-codegen-maven`), matching the Maven/GitHub
-  Packages distribution path.
-- **Honest flag:** jOOQ codegen normally introspects a live database. Workarounds,
-  in preference order:
-  1. **Ephemeral real Postgres (chosen):** Testcontainers or a CI service container
-     running a pinned `postgres` image; apply `schema.sql`; run jOOQ codegen with
-     `PostgresDatabase`. Most faithful — a real Postgres parses real Postgres DDL.
-  2. **jOOQ `DDLDatabase` (rejected as primary):** parses DDL via an H2-backed
-     simulation. Fast and container-free, but it is a *simulation* — PostgreSQL
-     specifics (`CREATE EXTENSION pgcrypto`, `gen_random_uuid()`,
-     `TIMESTAMPTZ`, domains, exclusion constraints) are partially or silently
-     unsupported, risking wrong output rather than a clean failure. May be kept as a
-     fast-path experiment only if the schema stays within its supported subset.
-  3. Flyway-database mode: still resolves to a JDBC/H2 path — same caveats.
-- License sanity: jOOQ Community Edition is Apache-2.0 and covers standard
-  PostgreSQL; verify at pin time that required features don't pull in commercial
-  editions (jOOQ Professional/Enterprise gate some dialect/version combinations).
-- Rejected: **Hibernate Tools / JPA metamodel generation, MyBatis Generator,
-  QueryDSL** — all need a live DB anyway, and each produces ORM-coupled or
-  heavier-weight output; jOOQ's typed-SQL model best matches "contract-first" usage.
-
 ## Consequences
 
 **Positive**
 
-- One pipeline shape per artifact type; the DDL cells share a single reusable
-  "ephemeral Postgres → apply schema → introspect" preamble (Task 7).
 - All OpenAPI cells consume `openapi.yaml` directly — no preprocessing.
-- Small, diffable artifacts (openapi-typescript, kysely-codegen) make the Task 8
-  regen-diff gate precise rather than noisy.
+- Small, diffable artifacts (openapi-typescript types) make the Task 8 regen-diff gate
+  precise rather than noisy.
 
 **Negative**
 
-- The DDL pipelines require Docker (or a Postgres service container) in every
-  environment that regenerates, including CI — documented requirement for Task 7.
-- Two toolchain ecosystems must be versioned and locked: npm and Python/uv; the Java
-  cell additionally requires a JDK and pinned generator release. Regen output is
-  only deterministic when *all* of {tool version, DB image tag, JDK/Node/Python
-  version} are pinned — the pipeline manifest must record them together.
-- `schema.sql` must remain applicable to a *fresh, empty* Postgres for the ephemeral
-  step to work (no dependency on pre-existing extensions beyond what the script
-  itself creates). `CREATE EXTENSION pgcrypto` in schema.sql already assumes the
-  contrib package is present in the chosen postgres image.
+- Three toolchain ecosystems must be versioned and locked: npm and Python/uv; the Java
+  cell additionally requires a JDK and pinned generator release. Regen output is only
+  deterministic when *all* of {tool version, JDK/Node/Python version} are pinned — the
+  pipeline manifest must record them together.
 - openapi-python-client imposes its runtime deps (httpx, attrs/pydantic per version)
   on generated packages — acceptable, but a locked input to each client's
-  pyproject.
+  `pyproject`.
 
 ## Alternatives (whole-approach)
 
@@ -181,6 +103,10 @@ Hard constraints:
   and it forces a JVM into every pipeline.
 - **Types-only contracts (no runtime clients):** rejected; consumers explicitly
   consume packaged clients (tasks/plan.md).
-- **Parse DDL directly instead of ephemeral DB:** rejected; no boring maintained
-  tool parses raw Postgres DDL into these targets — introspection against a real,
-  pinned Postgres is more correct.
+
+## Historical note: SQL DDL codegen (removed)
+
+Prior versions of this ADR selected kysely-codegen, sqlacodegen, and jOOQ for
+`database_schema/schema.sql` with an ephemeral Postgres preamble. That scope was
+retired in favor of **xq-db** owning schema and DB clients. The old release
+`py/xq-db-client/0.1.0` is deprecated (see `docs/contracts-conventions.md`).

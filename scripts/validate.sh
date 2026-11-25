@@ -9,14 +9,12 @@
 #   * <service> dir name is lowercase kebab-case
 #   * info.version has a matching v<info.version>/ dir containing
 #     {nodejs,python,java}/ subdirectories
-#   * database_schema/schema.sql applies cleanly to an ephemeral embedded
-#     Postgres (scripts/pg-ephemeral.sh start; ON_ERROR_STOP=1 inside)
 #
 # Check 2 -- regeneration-diff:
-#   * re-run all six gen-*.sh pipelines against the current contracts
-#     (OpenAPI: the v<info.version> dir of each service; DB: all three langs)
-#   * `git diff --exit-code -- openapi/ database_schema/` must be empty and
-#     `git status --porcelain` must show no untracked files under those dirs.
+#   * re-run all gen-openapi-*.sh pipelines against the current contracts
+#     (the v<info.version> dir of each service)
+#   * `git diff --exit-code -- openapi/` must be empty and
+#     `git status --porcelain` must show no untracked files under openapi/.
 #     Any diff or untracked file = committed output drifted from the contract.
 #
 # Usage: scripts/validate.sh
@@ -34,23 +32,13 @@ cd "$ROOT"
 command -v uv >/dev/null 2>&1 || die "uv not found on PATH"
 command -v git >/dev/null 2>&1 || die "git not found on PATH"
 
-# Container started by the schema.sql lint below; always cleaned up.
-CONTAINER=""
-cleanup() {
-    if [ -n "$CONTAINER" ]; then
-        "$SCRIPT_DIR/pg-ephemeral.sh" stop "$CONTAINER" >/dev/null 2>&1 || true
-        CONTAINER=""
-    fi
-}
-trap cleanup EXIT
-trap 'exit 1' INT TERM
-
-# --- Check 1a: OpenAPI contract lint -----------------------------------------
+# --- Check 1: OpenAPI contract lint ------------------------------------------
 say "linting OpenAPI contracts"
 
 # service<tab>version pairs to regenerate in check 2.
 PAIRS_FILE=$(mktemp "${TMPDIR:-/tmp}/xq-validate.XXXXXX")
-trap 'rm -f "$PAIRS_FILE"; cleanup' EXIT
+trap 'rm -f "$PAIRS_FILE"' EXIT
+trap 'exit 1' INT TERM
 
 for SPEC in openapi/*/openapi.yaml; do
     [ -f "$SPEC" ] || die "no contracts found matching openapi/*/openapi.yaml"
@@ -85,19 +73,6 @@ for SPEC in openapi/*/openapi.yaml; do
     printf '%s\t%s\n' "$SERVICE" "v$INFO_VERSION" >> "$PAIRS_FILE"
 done
 
-# --- Check 1b: schema.sql applies cleanly ------------------------------------
-say "applying database_schema/schema.sql to ephemeral postgres"
-ERR_FILE=$(mktemp "${TMPDIR:-/tmp}/xq-validate-pg.XXXXXX")
-if ! DSN=$("$SCRIPT_DIR/pg-ephemeral.sh" start 2>"$ERR_FILE"); then
-    cat "$ERR_FILE" >&2 || true
-    rm -f "$ERR_FILE"
-    die "database_schema/schema.sql failed to apply to a fresh Postgres"
-fi
-CONTAINER=$(sed -n 's/^container: //p' "$ERR_FILE" | head -n 1)
-rm -f "$ERR_FILE"
-"$SCRIPT_DIR/pg-ephemeral.sh" stop "$CONTAINER" >/dev/null 2>&1 || true
-CONTAINER=""
-
 # --- Check 2: regeneration-diff ----------------------------------------------
 say "regenerating clients (regen-diff check)"
 
@@ -109,25 +84,21 @@ while IFS="$(printf '\t')" read -r SERVICE VERSION; do
 done < "$PAIRS_FILE"
 rm -f "$PAIRS_FILE"
 
-./scripts/gen-db-nodejs.sh
-./scripts/gen-db-python.sh
-./scripts/gen-db-java.sh
-
 say "checking for committed/generated drift"
 DIFF_FILE=$(mktemp "${TMPDIR:-/tmp}/xq-validate-diff.XXXXXX")
 STATUS=0
-git diff --exit-code -- openapi/ database_schema/ > "$DIFF_FILE" || STATUS=$?
+git diff --exit-code -- openapi/ > "$DIFF_FILE" || STATUS=$?
 if [ "$STATUS" -ne 0 ]; then
     cat "$DIFF_FILE" >&2
     rm -f "$DIFF_FILE"
-    die "generated output drifted from contracts; re-run the gen-*.sh pipelines and commit the result (diff above)"
+    die "generated output drifted from contracts; re-run the gen-openapi-*.sh pipelines and commit the result (diff above)"
 fi
 rm -f "$DIFF_FILE"
 
-UNTRACKED=$(git status --porcelain -- openapi/ database_schema/ | grep '^??' || true)
+UNTRACKED=$(git status --porcelain -- openapi/ | grep '^??' || true)
 if [ -n "$UNTRACKED" ]; then
     printf '%s\n' "$UNTRACKED" >&2
-    die "untracked files under openapi/ or database_schema/; commit regenerated output or remove strays"
+    die "untracked files under openapi/; commit regenerated output or remove strays"
 fi
 
 say "contract validation passed"

@@ -1,3 +1,0 @@
-# Install-time artifacts only; the committed artifact is the .ts output itself.
-node_modules/
-package-lock.json
