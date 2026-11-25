@@ -1,18 +1,5 @@
-# Pinned codegen toolchain for the database_schema -> python pipeline (ADR 0001).
-# Consumed by scripts/gen-db-python.sh via `uv tool run --from/--with`.
+# Pinned Python toolchain for contract validation and OpenAPI codegen (ADR 0001).
 #
-# Resolved 2026-10-20 as the latest stable releases on PyPI:
-#   sqlacodegen 4.0.4        released 2026-06-19
-#   sqlalchemy 2.1.5         released 2026-10-16
-#   psycopg[binary] 3.3.6    released 2026-09-18 (psycopg v3, binary wheels)
-#
-# The PostgreSQL server version is pinned in scripts/pg-ephemeral.sh via
-# embedded `postgresql-binaries==16.15.0` (no Docker dependency).
 # Bump these pins only via a deliberate upgrade PR; the Task 8 regen-diff gate
 # depends on byte-identical regeneration.
-postgresql-binaries==16.15.0
-sqlacodegen==4.0.4
-sqlalchemy==2.1.5
-psycopg[binary]==3.3.6
-# Contract lint validator used by scripts/validate.sh (Task 8 gate).
 openapi-spec-validator==0.7.2
