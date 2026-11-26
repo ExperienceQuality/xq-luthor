@@ -28,7 +28,7 @@ Hard constraints:
 
 | Artifact | Language | Selected tool | Input consumed | Version pin strategy |
 |---|---|---|---|---|
-| OpenAPI | nodejs | **openapi-typescript** (types) + **openapi-fetch** (runtime) | `openapi.yaml` directly | npm devDependency + committed `package-lock.json` in the pipeline workspace |
+| OpenAPI | nodejs | **openapi-typescript** (types) + **openapi-fetch** (runtime) — **superseded for ≥ 1.2.0** by [ADR 0002](./0002-openapi-nodejs-hey-api.md) | `openapi.yaml` directly | npm devDependency + committed `package-lock.json` in the pipeline workspace |
 | OpenAPI | python | **openapi-python-client** | `openapi.yaml` directly | `uv` pinned run (`uv tool run` with `==` pin or locked via `uv.lock`); pin recorded in pipeline manifest |
 | OpenAPI | java | **openapi-generator** `java` generator, `library=okhttp-gson` | `openapi.yaml` directly | Pin generator release (Maven plugin version or CLI jar/container image digest) + JDK toolchain version |
 

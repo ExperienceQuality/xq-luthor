@@ -1,13 +1,10 @@
 # pipeline/nodejs
 
-Pinned npm toolchain for the OpenAPI -> nodejs client pipeline (ADR 0001).
+Pinned npm toolchain for the OpenAPI → nodejs client pipeline.
 
-- `openapi-typescript` generates `schema.ts` types from `openapi/<service>/openapi.yaml`.
-- `openapi-fetch` is the runtime dependency baked into each generated client's
-  `package.json`; its version is read from this workspace's `package.json` so the
-  pin lives in exactly one place.
-- `typescript` satisfies openapi-typescript's `typescript: ^5.x` peer range and
-  type-checks generated output.
+| Contract semver | ADR | Tools |
+|-----------------|-----|-------|
+| `< 1.2.0` | [ADR 0001](../../docs/adr/0001-codegen-tools.md) | `openapi-typescript` + `openapi-fetch` → `schema.ts` + `createClient()` |
+| `≥ 1.2.0` | [ADR 0002](../../docs/adr/0002-openapi-nodejs-hey-api.md) | `@hey-api/openapi-ts` (SDK flat + Fetch client) → `src/` + compiled `dist/` |
 
-Install/update the toolchain with `npm ci` (uses the committed `package-lock.json`).
-Bump pins only via a deliberate upgrade PR — regeneration must be deterministic.
+Install with `npm ci` (committed `package-lock.json`). Bump pins only in a deliberate upgrade PR so regeneration stays deterministic.

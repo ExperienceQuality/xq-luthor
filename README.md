@@ -23,7 +23,7 @@ Layout rules:
 
 Consumers install **published artifacts**, not this repo's generated sources:
 
-- **Node.js** — npm packages `@experiencequality/<service>-client` on GitHub Packages (`npm.pkg.github.com`).
+- **Node.js** — npm packages `@experiencequality/<service>-client` on GitHub Packages (`npm.pkg.github.com`). Contract versions **≥ 1.2.0** use flat `operationId` helpers ([ADR 0002](docs/adr/0002-openapi-nodejs-hey-api.md)); older dirs keep openapi-fetch `createClient()`.
 - **Java** — Maven artifacts `com.experiencequality:<service>-client` on GitHub Packages (`maven.pkg.github.com`).
 - **Python** — wheel/sdist assets on per-package GitHub Releases (tags `py/<pkg>/<semver>`); install via `uv pip install '<release-asset-wheel-url>'`.
 
