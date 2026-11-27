@@ -13,23 +13,26 @@ openapi/<service_name>/<version>/{nodejs,python,java}/
 
 Layout rules:
 
-- OpenAPI documents live at `openapi/<service_name>/openapi.yaml`, one document per service. `<service_name>` is the service identifier (for example, `openapi/example/openapi.yaml`).
-- Generated API clients live under `openapi/<service_name>/<version>/<lang>/`, where `<version>` is the contract version (for example, `v1.0.0`) and `<lang>` is one of `nodejs`, `python`, or `java`.
+- OpenAPI documents live at `openapi/<service_name>/openapi.yaml`, one document per service. `<service_name>` is the service identifier (for example, `openapi/routine-service/openapi.yaml`).
+- Generated API clients live under `openapi/<service_name>/<version>/<lang>/`, where `<version>` is the contract version (for example, `v1.2.0`) and `<lang>` is one of `nodejs`, `python`, or `java`.
 - Directories that hold generated code are never hand-edited. Generated output is refreshed by rerunning the codegen pipeline, not by editing files in place.
 - Contracts themselves (`openapi.yaml`) are hand-authored and reviewed; only the generated client directories are machine-produced.
 - AsyncAPI support is explicitly deferred; do not add an `asyncapi/` directory yet.
+- `openapi/example/` is a **template only** (layout / pipeline smoke). It is not a production contract — do not depend on it or its published `1.0.0` clients (see [Deprecated releases](docs/contracts-conventions.md#deprecated-releases), GH #17).
 
 ## Current target
 
-For **routine-service** and **exercise-service**, the current target contract is **`1.2.0`** (`openapi/<service>/openapi.yaml` + `v1.2.0/{nodejs,python,java}/`). Older dirs `v1.0.0` and `v1.1.0` stay published and immutable. Node clients for ≥ 1.2.0 use [ADR 0002](docs/adr/0002-openapi-nodejs-hey-api.md) (`@hey-api/openapi-ts`).
+For **routine-service** and **exercise-service**, the current target contract is **`1.2.0`** (`openapi/<service>/openapi.yaml` + `v1.2.0/{nodejs,python,java}/`). Depend on **1.2.0**, not `1.0.0`, `1.1.0`, or `example`.
+
+Supersession (dirs and published tags/releases stay; do **not** delete them): **`1.0.0` → `1.1.0` → `1.2.0` (current)**. Older dirs `v1.0.0` and `v1.1.0` remain published and immutable. Their Node clients stay on the pre–[ADR 0002](docs/adr/0002-openapi-nodejs-hey-api.md) TypeScript generator; Node clients for ≥ 1.2.0 use ADR 0002 (`@hey-api/openapi-ts`).
 
 Semver rules, breaking-change definition (including generator/call-shape), and deprecation: [docs/contracts-conventions.md — Versioning](docs/contracts-conventions.md#versioning).
 
-`fitness-bff` and `example` are not part of this target cut (see GH #18 / #17).
+`fitness-bff` is out of this target cut (GH #18). `example` is template-only (GH #17), not a current target.
 
 ## Consuming clients
 
-Consumers install **published artifacts**, not this repo's generated sources:
+Consumers install **published artifacts**, not this repo's generated sources. Prefer the **current target** packages (`routine-service` / `exercise-service` **1.2.0**). Do not take a dependency on `example` or on superseded **1.0.0** / **1.1.0** clients for new work.
 
 - **Node.js** — npm packages `@experiencequality/<service>-client` on GitHub Packages (`npm.pkg.github.com`). Contract versions **≥ 1.2.0** use flat `operationId` helpers ([ADR 0002](docs/adr/0002-openapi-nodejs-hey-api.md)); older dirs keep openapi-fetch `createClient()`.
 - **Java** — Maven artifacts `com.experiencequality:<service>-client` on GitHub Packages (`maven.pkg.github.com`).

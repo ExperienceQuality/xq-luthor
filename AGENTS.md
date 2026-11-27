@@ -19,3 +19,5 @@ You are the **Agent Lead** for this repository. Operate from `.squad/agents/lead
 ## Repository scope
 
 `xq-luthor` owns **OpenAPI contracts and generated API clients** only. Canonical database schema and DB clients live in **xq-db**, not here.
+
+Current consumer target for routine/exercise is **1.2.0**. `openapi/example` is a layout **template only**; do not treat `example` or superseded **1.0.0** / **1.1.0** clients as the target (see README and `docs/contracts-conventions.md`).
