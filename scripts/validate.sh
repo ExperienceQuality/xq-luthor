@@ -10,7 +10,13 @@
 #   * info.version has a matching v<info.version>/ dir containing
 #     {nodejs,python,java}/ subdirectories
 #
-# Check 2 -- regeneration-diff:
+# Check 2 -- OpenAPI breaking-change gate (issue #16):
+#   * scripts/check-openapi-breaking.sh compares each current contract to the
+#     previously published version (largest v* < info.version) and fails on
+#     breaking deltas unless MAJOR was bumped; also guards generator/call-shape
+#     immutability on published version dirs.
+#
+# Check 3 -- regeneration-diff:
 #   * re-run all gen-openapi-*.sh pipelines against the current contracts
 #     (the v<info.version> dir of each service)
 #   * `git diff --exit-code -- openapi/` must be empty and
@@ -73,7 +79,11 @@ for SPEC in openapi/*/openapi.yaml; do
     printf '%s\t%s\n' "$SERVICE" "v$INFO_VERSION" >> "$PAIRS_FILE"
 done
 
-# --- Check 2: regeneration-diff ----------------------------------------------
+# --- Check 2: OpenAPI breaking-change gate -----------------------------------
+say "checking OpenAPI breaking changes"
+"$SCRIPT_DIR/check-openapi-breaking.sh"
+
+# --- Check 3: regeneration-diff ----------------------------------------------
 say "regenerating clients (regen-diff check)"
 
 while IFS="$(printf '\t')" read -r SERVICE VERSION; do
