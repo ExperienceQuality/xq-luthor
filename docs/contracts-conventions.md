@@ -16,6 +16,7 @@ Database schema and DB clients are **not** owned by this repo. Canonical DDL and
 - `<version>` must equal `info.version` in that service's `openapi.yaml`, plus the `v` prefix.
 - Version directories are immutable. Once a `<version>` is generated and published, never edit, regenerate, or delete anything under it.
 - Any contract change requiring new clients is a new `<version>` directory — including fixes. Never mutate a released version dir.
+- **Current target (routine-service, exercise-service):** **`1.2.0`**. Do not treat `1.1.0` as the active target. `1.2.0` keeps the multi-user JWT surface from 1.1.0 and adds exercise `POST /api/v1/exercise-logs` **409** (Conflict) to match service behavior. Node clients for ≥ 1.2.0 use [ADR 0002](./adr/0002-openapi-nodejs-hey-api.md).
 
 ## Authorship
 

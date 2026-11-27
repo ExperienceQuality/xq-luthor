@@ -1,0 +1,166 @@
+export type ClientOptions = {
+    baseUrl: `${string}://${string}` | (string & {});
+};
+export type CreateExerciseLogRequest = {
+    exerciseName: string;
+    /**
+     * Optional client-observed workout time. Server uses current time when omitted.
+     */
+    loggedAt?: string;
+    sets: Array<ExerciseSetRequest>;
+};
+export type ExerciseSetRequest = {
+    setNumber: number;
+    weightKg: number;
+    reps: number;
+};
+export type ExerciseLog = {
+    id: number;
+    exerciseName: string;
+    loggedAt: string;
+    sets: Array<ExerciseSet>;
+    /**
+     * Maximum weightKg multiplied by reps among the log's sets.
+     */
+    highestSetVolumeKg: number;
+};
+export type ExerciseSet = {
+    id: number;
+    setNumber: number;
+    weightKg: number;
+    reps: number;
+    volumeKg: number;
+};
+export type ExerciseLogPage = {
+    items: Array<ExerciseLog>;
+    nextCursor: string | null;
+};
+export type ExerciseSummary = {
+    exerciseName: string;
+    logCount: number;
+    lastLoggedAt: string;
+};
+export type Problem = {
+    type: string;
+    title: string;
+    status: number;
+    detail: string;
+    code: string;
+    violations?: Array<{
+        field: string;
+        message: string;
+    }>;
+};
+export type Limit = number;
+export type Cursor = string;
+export type ListExerciseLogsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Case-insensitive exact exercise-name filter.
+         */
+        exerciseName?: string;
+        /**
+         * Repeated query parameter; matches any supplied name case-insensitively.
+         */
+        exerciseNames?: Array<string>;
+        sort?: 'loggedAt' | 'highestSetVolume';
+        limit?: number;
+        cursor?: string;
+    };
+    url: '/api/v1/exercise-logs';
+};
+export type ListExerciseLogsErrors = {
+    /**
+     * Invalid request.
+     */
+    400: Problem;
+    /**
+     * Missing, invalid, expired, or unacceptable access token.
+     */
+    401: Problem;
+};
+export type ListExerciseLogsError = ListExerciseLogsErrors[keyof ListExerciseLogsErrors];
+export type ListExerciseLogsResponses = {
+    /**
+     * Page of exercise logs.
+     */
+    200: ExerciseLogPage;
+};
+export type ListExerciseLogsResponse = ListExerciseLogsResponses[keyof ListExerciseLogsResponses];
+export type CreateExerciseLogData = {
+    body: CreateExerciseLogRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/exercise-logs';
+};
+export type CreateExerciseLogErrors = {
+    /**
+     * Invalid request.
+     */
+    400: Problem;
+    /**
+     * Missing, invalid, expired, or unacceptable access token.
+     */
+    401: Problem;
+    /**
+     * Request conflicts with persisted data.
+     */
+    409: Problem;
+};
+export type CreateExerciseLogError = CreateExerciseLogErrors[keyof CreateExerciseLogErrors];
+export type CreateExerciseLogResponses = {
+    /**
+     * Exercise log created.
+     */
+    201: ExerciseLog;
+};
+export type CreateExerciseLogResponse = CreateExerciseLogResponses[keyof CreateExerciseLogResponses];
+export type ListDistinctExercisesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/exercise-logs/exercises';
+};
+export type ListDistinctExercisesErrors = {
+    /**
+     * Missing, invalid, expired, or unacceptable access token.
+     */
+    401: Problem;
+};
+export type ListDistinctExercisesError = ListDistinctExercisesErrors[keyof ListDistinctExercisesErrors];
+export type ListDistinctExercisesResponses = {
+    /**
+     * Exercise usage summaries.
+     */
+    200: Array<ExerciseSummary>;
+};
+export type ListDistinctExercisesResponse = ListDistinctExercisesResponses[keyof ListDistinctExercisesResponses];
+export type GetExerciseLogData = {
+    body?: never;
+    path: {
+        exerciseLogId: number;
+    };
+    query?: never;
+    url: '/api/v1/exercise-logs/{exerciseLogId}';
+};
+export type GetExerciseLogErrors = {
+    /**
+     * Missing, invalid, expired, or unacceptable access token.
+     */
+    401: Problem;
+    /**
+     * Exercise log does not exist or is not owned by the authenticated principal.
+     */
+    404: Problem;
+};
+export type GetExerciseLogError = GetExerciseLogErrors[keyof GetExerciseLogErrors];
+export type GetExerciseLogResponses = {
+    /**
+     * Exercise log.
+     */
+    200: ExerciseLog;
+};
+export type GetExerciseLogResponse = GetExerciseLogResponses[keyof GetExerciseLogResponses];
+//# sourceMappingURL=types.gen.d.ts.map

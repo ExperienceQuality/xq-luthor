@@ -1,0 +1,38 @@
+{
+  "name": "@experiencequality/routine-service-client",
+  "version": "1.2.0",
+  "description": "Generated TypeScript client for the routine-service service (openapi/routine-service/openapi.yaml, contract v1.2.0). Do not edit by hand. Built with @hey-api/openapi-ts per ADR 0002.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "openapi-ts.config.ts"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "typescript": "5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ExperienceQuality/xq-luthor.git",
+    "directory": "openapi/routine-service/v1.2.0/nodejs"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
