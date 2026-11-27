@@ -8,6 +8,7 @@ wheels/
 
 # ADR 0002 nodejs clients ship compiled dist/ (JS + .d.ts) as the package entry.
 !openapi/**/nodejs/dist/
+!openapi/**/nodejs/dist/**
 
 # Virtual environments
 .venv
