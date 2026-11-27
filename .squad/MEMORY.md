@@ -38,6 +38,7 @@ Squad rules:
   - OpenAPI → nodejs **&lt; 1.2.0**: ADR 0001 — `openapi-typescript` + `openapi-fetch`, `createClient()`.
   - OpenAPI → nodejs **≥ 1.2.0**: ADR 0002 (accepted) — `@hey-api/openapi-ts` flat SDK + compiled `dist/`.
 - Current target contracts: **routine-service / exercise-service `1.2.0`** (GH #12). `v1.0.0` / `v1.1.0` dirs immutable. fitness-bff left alone for now (#18).
+- Versioning policy (GH #13): MAJOR/MINOR/PATCH + breaking list in `docs/contracts-conventions.md`; generator/call-shape change is client-breaking and never applied in place to a published version dir.
   - OpenAPI → python: `openapi-python-client`, direct.
   - OpenAPI → java: `openapi-generator` `java` generator with `library=okhttp-gson` (no Spring dependency), direct.
 - Determinism requires pinning all of: tool version (recorded in a committed lockfile/manifest), JDK/Node/Python versions.
