@@ -23,6 +23,8 @@ Layout rules:
 
 For **routine-service** and **exercise-service**, the current target contract is **`1.2.0`** (`openapi/<service>/openapi.yaml` + `v1.2.0/{nodejs,python,java}/`). Older dirs `v1.0.0` and `v1.1.0` stay published and immutable. Node clients for ≥ 1.2.0 use [ADR 0002](docs/adr/0002-openapi-nodejs-hey-api.md) (`@hey-api/openapi-ts`).
 
+Semver rules, breaking-change definition (including generator/call-shape), and deprecation: [docs/contracts-conventions.md — Versioning](docs/contracts-conventions.md#versioning).
+
 `fitness-bff` and `example` are not part of this target cut (see GH #18 / #17).
 
 ## Consuming clients

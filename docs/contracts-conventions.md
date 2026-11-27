@@ -12,11 +12,68 @@ Database schema and DB clients are **not** owned by this repo. Canonical DDL and
 
 ## Versioning
 
-- Generated OpenAPI clients live under `openapi/<service_name>/<version>/`, where `<version>` is semantic versioning with a mandatory `v` prefix: `vX.Y.Z` (e.g., `v1.0.0`).
-- `<version>` must equal `info.version` in that service's `openapi.yaml`, plus the `v` prefix.
-- Version directories are immutable. Once a `<version>` is generated and published, never edit, regenerate, or delete anything under it.
-- Any contract change requiring new clients is a new `<version>` directory — including fixes. Never mutate a released version dir.
-- **Current target (routine-service, exercise-service):** **`1.2.0`**. Do not treat `1.1.0` as the active target. `1.2.0` keeps the multi-user JWT surface from 1.1.0 and adds exercise `POST /api/v1/exercise-logs` **409** (Conflict) to match service behavior. Node clients for ≥ 1.2.0 use [ADR 0002](./adr/0002-openapi-nodejs-hey-api.md).
+### Layout and immutability
+
+- Generated OpenAPI clients live under `openapi/<service_name>/<version>/`, where `<version>` is semantic versioning with a mandatory `v` prefix: `vX.Y.Z` (e.g., `v1.2.0`).
+- `<version>` must equal `info.version` in that service's `openapi.yaml`, plus the `v` prefix. The hand-authored YAML always describes the **current target** version; older targets remain only as frozen dirs under `vX.Y.Z/`.
+- **Published version directories are immutable.** Once a `<version>` dir is generated and shipped (merged and/or published as npm/Maven/Python assets), never edit, regenerate, or delete anything under it — including generator upgrades or call-shape changes. Any change that needs new clients is a **new** `<version>` directory.
+
+### Current target
+
+| Service | Current target | Superseded (immutable) |
+|---------|----------------|------------------------|
+| `routine-service` | **`1.2.0`** | `1.0.0`, `1.1.0` |
+| `exercise-service` | **`1.2.0`** | `1.0.0`, `1.1.0` |
+
+`1.2.0` is the multi-user JWT target (snapshots, cursor pagination, `exerciseNames`, required fields) plus exercise `POST /api/v1/exercise-logs` **409**. Node clients for ≥ 1.2.0 use [ADR 0002](./adr/0002-openapi-nodejs-hey-api.md). New work depends on **1.2.0**, not 1.1.0.
+
+### Semver bumps (when to cut a new dir)
+
+Bump `info.version` and create `vX.Y.Z/` as follows. Always cut a new dir; never patch an existing published dir in place.
+
+| Bump | Use when |
+|------|----------|
+| **MAJOR** (`X`) | Breaking HTTP or **client** change for consumers of this contract (see below). Example: requiring JWT on paths that were public, removing `/api/v1/routines/{routineId}`, renaming `operationId` `getRoutine` → `fetchRoutine`. |
+| **MINOR** (`Y`) | Backward-compatible additive HTTP change, or a **non-breaking** client/tooling change that still needs a new immutable dir. Example: exercise-service `1.1.0` → `1.2.0` documenting create **409** while keeping the 1.1.0 surface; adding an optional query param. |
+| **PATCH** (`Z`) | Documentation-only or non-behavioral contract clarifications that still require regenerated clients for determinism (rare). Prefer MINOR if consumers could notice. Never use PATCH to sneak in breaking changes. |
+
+If unsure whether a change is breaking, bump **MAJOR**.
+
+### What counts as breaking
+
+Treat any of the following as **breaking** for that service’s consumers (→ **MAJOR**, new `vX.Y.Z`):
+
+**HTTP / OpenAPI contract**
+
+- Auth: adding required security (e.g. `bearerAuth`) where none existed; tightening scopes.
+- Paths / methods: removing or renaming a path; removing an HTTP method.
+- Request: adding a **required** field or parameter; tightening types/enums/patterns in a way that rejects previously valid input.
+- Response: removing a field consumers rely on; changing pagination shape (e.g. offset → cursor); changing success status codes; renaming schema or property names that appear in payloads.
+- Errors: removing a documented status that clients handle; changing problem `code` semantics without a new version.
+- Identifiers: renaming `operationId` or component schema names that generators bind to (affects typed clients even if wire JSON is unchanged).
+
+**Client / generator (language-specific)**
+
+- A **generator or call-shape change** is a **client breaking change for that language**, even when the HTTP contract is unchanged. Example: switching TypeScript from openapi-fetch `client.GET("/path")` to `@hey-api/openapi-ts` flat `getRoutine(...)` ([ADR 0002](./adr/0002-openapi-nodejs-hey-api.md) / issue #10).
+- **Do not** apply a new generator or call shape in place to a published version dir (`v1.0.0`, `v1.1.0`, …). Ship the new shape only under a new version dir (for TypeScript, contract semver ≥ **1.2.0**).
+- Python and Java keep their existing generators unless a separate ADR changes them; the same immutability rule applies.
+
+### Deprecation
+
+**Version deprecation**
+
+1. Mark the version superseded in this doc’s [Current target](#current-target) table (and README).
+2. Keep the `vX.Y.Z/` tree and published packages/tags; do **not** delete them in the deprecation PR.
+3. Point consumers at the current target (e.g. routine-service / exercise-service **1.2.0**).
+4. Optionally note the superseded version under [Deprecated releases](#deprecated-releases).
+
+**Operation deprecation**
+
+1. Prefer OpenAPI `deprecated: true` on the operation in a **new** minor/major contract version; do not edit an already-published version dir.
+2. Keep the operation until a later MAJOR removes it.
+3. Document migration in the PR / release notes (which service, which `operationId`, which replacement).
+
+Example: do not strip `listRoutines` from `openapi/routine-service/v1.1.0/`; introduce replacement or mark deprecated only in a newer target YAML and its new `vX.Y.Z/` clients.
 
 ## Authorship
 
@@ -52,11 +109,12 @@ Database schema and DB clients are **not** owned by this repo. Canonical DDL and
 
 ## Deprecated releases
 
-The following assets were published from this repo before database ownership moved to **xq-db**. **Do not use them for new work.** Tags and release files are retained for history only; they are not removed in issue #11.
+Tags and release files below stay for history; do **not** delete them when deprecating. Prefer the [current target](#current-target).
 
-| Tag | Package | Notes |
-|-----|---------|-------|
-| `py/xq-db-client/0.1.0` | `xq-db-client` | Deprecated. Use DB clients from **xq-db** instead. |
+| Tag / version | Package or contract | Notes |
+|---------------|---------------------|-------|
+| `py/xq-db-client/0.1.0` | `xq-db-client` | Deprecated (issue #11). Use DB clients from **xq-db**. |
+| routine-service / exercise-service **1.0.0**, **1.1.0** | API contracts + clients | Superseded by **1.2.0**. Dirs and published assets immutable; do not regenerate with the ADR 0002 TypeScript toolchain. |
 
 ## Consuming clients
 
