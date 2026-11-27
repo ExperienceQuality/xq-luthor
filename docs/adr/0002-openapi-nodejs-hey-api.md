@@ -1,6 +1,6 @@
 # ADR 0002: OpenAPI → nodejs via @hey-api/openapi-ts (SDK flat functions)
 
-Status: Proposed — requires David Châu approval before merge (GH issue #10).
+Status: Accepted — approved by David Châu 2026-11-27 (GH issue #10 / #12).
 
 Supersedes: ADR 0001, **OpenAPI → nodejs** cell only (`openapi-typescript` + `openapi-fetch`).
 
