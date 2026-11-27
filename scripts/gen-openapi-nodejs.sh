@@ -265,6 +265,8 @@ EOF
 EOF
 
   cat > "$OUT_DIR/.gitignore" <<'EOF'
+# Install-time only. Committed dist/ is the published entry (ADR 0002); root
+# .gitignore un-ignores openapi/**/nodejs/dist/.
 node_modules/
 package-lock.json
 EOF
