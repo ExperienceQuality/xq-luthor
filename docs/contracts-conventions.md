@@ -125,6 +125,22 @@ dependencies {
 
 Packages: `@experiencequality/<service>-client` (e.g. `example-client@1.0.0`).
 
+**Legacy clients** (`openapi/*/v1.0.0/nodejs`, `v1.1.0/nodejs`) expose `createClient(baseUrl)` and path-literal `client.GET(...)` via openapi-fetch ([ADR 0001](./adr/0001-codegen-tools.md)).
+
+**Current target clients** (contract semver ≥ **1.2.0**, [ADR 0002](./adr/0002-openapi-nodejs-hey-api.md)) compile to `dist/` and export flat `operationId` functions (e.g. `getRoutine`, `createRoutine`) plus a shared `client` with `setConfig`:
+
+```ts
+import { client, getRoutine, listRoutines } from "@experiencequality/routine-service-client";
+
+client.setConfig({
+  baseUrl: process.env.XQ_ROUTINE_BASE_URL!,
+  auth: () => process.env.XQ_JWT!,
+});
+
+const { data: routine } = await getRoutine({ path: { routineId } });
+const { data: page } = await listRoutines({ query: { limit: 20 } });
+```
+
 `.npmrc` in the consumer project:
 
 ```ini
