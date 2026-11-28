@@ -7,8 +7,9 @@ Database schema and DB clients are **not** owned by this repo. Canonical DDL and
 ## Service naming
 
 - One directory per service: `openapi/<service_name>/`.
-- `<service_name>` is lowercase kebab-case (`a-z`, `0-9`, `-`) and must match the consumer-facing service name exactly (e.g., `openapi/example/`).
+- `<service_name>` is lowercase kebab-case (`a-z`, `0-9`, `-`) and must match the consumer-facing service name exactly (e.g., `openapi/routine-service/`).
 - Exactly one `openapi.yaml` per service directory.
+- `openapi/example/` is a **template only** (illustrates layout and codegen). It is not a production service; do not depend on it for new work (GH #17).
 
 ## Versioning
 
@@ -24,8 +25,9 @@ Database schema and DB clients are **not** owned by this repo. Canonical DDL and
 |---------|----------------|------------------------|
 | `routine-service` | **`1.2.0`** | `1.0.0`, `1.1.0` |
 | `exercise-service` | **`1.2.0`** | `1.0.0`, `1.1.0` |
+| `example` | *(none — template only)* | `1.0.0` (history only; not a target) |
 
-`1.2.0` is the multi-user JWT target (snapshots, cursor pagination, `exerciseNames`, required fields) plus exercise `POST /api/v1/exercise-logs` **409**. Node clients for ≥ 1.2.0 use [ADR 0002](./adr/0002-openapi-nodejs-hey-api.md). New work depends on **1.2.0**, not 1.1.0.
+Supersession chain for routine/exercise: **`1.0.0` → `1.1.0` → `1.2.0` (current)**. `1.2.0` is the multi-user JWT target (snapshots, cursor pagination, `exerciseNames`, required fields) plus exercise `POST /api/v1/exercise-logs` **409**. Node clients for ≥ 1.2.0 use [ADR 0002](./adr/0002-openapi-nodejs-hey-api.md). New work depends on **1.2.0**, not `1.0.0`, `1.1.0`, or `example`.
 
 ### Semver bumps (when to cut a new dir)
 
@@ -109,12 +111,15 @@ Example: do not strip `listRoutines` from `openapi/routine-service/v1.1.0/`; int
 
 ## Deprecated releases
 
-Tags and release files below stay for history; do **not** delete them when deprecating. Prefer the [current target](#current-target).
+Tags and release files below stay for history; do **not** delete them when deprecating (including this issue’s retention of `py/xq-example-client/1.0.0`, `py/xq-routine-service-client/1.0.0`, and `py/xq-exercise-service-client/1.0.0`). Prefer the [current target](#current-target).
 
 | Tag / version | Package or contract | Notes |
 |---------------|---------------------|-------|
 | `py/xq-db-client/0.1.0` | `xq-db-client` | Deprecated (issue #11). Use DB clients from **xq-db**. |
-| routine-service / exercise-service **1.0.0**, **1.1.0** | API contracts + clients | Superseded by **1.2.0**. Dirs and published assets immutable; do not regenerate with the ADR 0002 TypeScript toolchain. |
+| `py/xq-example-client/1.0.0` / `openapi/example` | `example` template | **Template only** (GH #17). Not a production target; keep tree and tag; do not treat as current. |
+| routine-service / exercise-service **1.0.0** | API contracts + clients | Superseded first by **1.1.0**, then by **1.2.0** (current). Dirs/tags immutable. |
+| routine-service / exercise-service **1.1.0** | API contracts + clients | Superseded by **1.2.0**. Dirs/tags immutable. |
+| Node under `v1.0.0/` and `v1.1.0/` | TypeScript clients | Stay on the pre–ADR 0002 (openapi-fetch) generator; do **not** regenerate with the ADR 0002 toolchain. |
 
 ## Consuming clients
 
@@ -127,7 +132,7 @@ Python clients need no token (public repo release assets and git tags; see [Dist
 
 ### Java (Maven)
 
-Coordinates: `com.experiencequality:<service>-client:<semver>` (e.g. `example-client:1.0.0`).
+Coordinates: `com.experiencequality:<service>-client:<semver>` (e.g. current target `routine-service-client:1.2.0`). Do not use `example-client` or superseded `1.0.0` / `1.1.0` for new work.
 
 `pom.xml`:
 
@@ -142,8 +147,8 @@ Coordinates: `com.experiencequality:<service>-client:<semver>` (e.g. `example-cl
 <dependencies>
   <dependency>
     <groupId>com.experiencequality</groupId>
-    <artifactId>example-client</artifactId>
-    <version>1.0.0</version>
+    <artifactId>routine-service-client</artifactId>
+    <version>1.2.0</version>
   </dependency>
 </dependencies>
 ```
@@ -176,15 +181,15 @@ repositories {
 }
 
 dependencies {
-    implementation("com.experiencequality:example-client:1.0.0")
+    implementation("com.experiencequality:routine-service-client:1.2.0")
 }
 ```
 
 ### Node.js (npm)
 
-Packages: `@experiencequality/<service>-client` (e.g. `example-client@1.0.0`).
+Packages: `@experiencequality/<service>-client` (e.g. current target `@experiencequality/routine-service-client@1.2.0`). Do not depend on `example-client` or superseded `1.0.0` / `1.1.0` for new work.
 
-**Legacy clients** (`openapi/*/v1.0.0/nodejs`, `v1.1.0/nodejs`) expose `createClient(baseUrl)` and path-literal `client.GET(...)` via openapi-fetch ([ADR 0001](./adr/0001-codegen-tools.md)).
+**Legacy clients** (`openapi/*/v1.0.0/nodejs`, `v1.1.0/nodejs`) expose `createClient(baseUrl)` and path-literal `client.GET(...)` via openapi-fetch ([ADR 0001](./adr/0001-codegen-tools.md)). Those dirs stay on that generator; do not regenerate them with ADR 0002.
 
 **Current target clients** (contract semver ≥ **1.2.0**, [ADR 0002](./adr/0002-openapi-nodejs-hey-api.md)) compile to `dist/` and export flat `operationId` functions (e.g. `getRoutine`, `createRoutine`) plus a shared `client` with `setConfig`:
 
@@ -207,7 +212,7 @@ const { data: page } = await listRoutines({ query: { limit: 20 } });
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
-Then `npm install @experiencequality/example-client@1.0.0`.
+Then `npm install @experiencequality/routine-service-client@1.2.0`.
 
 ### GitHub Actions example
 
