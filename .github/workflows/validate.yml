@@ -1,4 +1,6 @@
-# Contract validation gate (Task 8): lint contracts + regeneration-diff check.
+# Contract validation gate (Task 8 / issue #16):
+#   lint OpenAPI contracts, breaking-change check vs previously published
+#   version (scripts/check-openapi-breaking.sh), and regeneration-diff.
 # Any contract change must ship with its regenerated output in the same PR —
 # this workflow fails when they diverge (see docs/contracts-conventions.md).
 name: validate
